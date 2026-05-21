@@ -79,6 +79,7 @@ const RED  = '/assets/units/red'
 export const SPRITE_SHEETS: Record<string, SpriteSheet> = {
   // warrior has a real hurt.png
   'blue-warrior': sheet(`${BLUE}/warrior`, 8, 6, 4, `${BLUE}/warrior/hurt.png`, 6),
+  // archer: attack clip uses arrow.png as projectile effect
   'blue-archer':  sheet(`${BLUE}/archer`,  6, 4, 8, null, 4),
   'blue-lancer':  sheet(`${BLUE}/lancer`,  12, 6, 3, null, 6, 320, 320),
   'blue-pawn':    sheet(`${BLUE}/pawn`,    8, 6, 4, null, 6),
@@ -87,6 +88,12 @@ export const SPRITE_SHEETS: Record<string, SpriteSheet> = {
   'red-archer':   sheet(`${RED}/archer`,   6, 4, 8, null, 4),
   'red-lancer':   sheet(`${RED}/lancer`,   12, 6, 3, null, 6, 320, 320),
   'red-pawn':     sheet(`${RED}/pawn`,     8, 6, 4, null, 6),
+}
+
+/** Arrow projectile sprites per team */
+export const ARROW_SPRITES: Record<string, string> = {
+  blue: `${BLUE}/archer/arrow.png`,
+  red:  `${RED}/archer/arrow.png`,
 }
 
 /**

@@ -9,7 +9,7 @@ export interface FloatText {
   color: string
 }
 
-export type UnitAnimState = 'idle' | 'walk' | 'attack' | 'hurt' | 'death'
+export type UnitAnimState = 'idle' | 'run' | 'attack' | 'hurt' | 'death'
 
 /** A live unit instance on the board or bench */
 export interface Unit {
@@ -27,6 +27,15 @@ export interface Unit {
   curHp: number
   atkVal: number
   spd: number
+  attackRange: number
+  moveSpd: number
+  moveTimer: number
+  /** Sub-cell visual position for smooth movement interpolation (0–1 within cell) */
+  visualX: number
+  visualY: number
+  /** Target cell for interpolation */
+  targetRow: number
+  targetCol: number
   color: string
   accent: string
   body: number[][]
@@ -40,6 +49,22 @@ export interface Unit {
   attackTimer: number
   dead: boolean
   floats: FloatText[]
+}
+
+/** Flying arrow projectile */
+export interface Projectile {
+  id: number
+  /** Pixel start position */
+  x: number
+  y: number
+  /** Pixel target position */
+  tx: number
+  ty: number
+  /** 0–1 progress */
+  progress: number
+  /** pixels per second */
+  speed: number
+  team: 'blue' | 'red'
 }
 
 export interface GridPosition {
@@ -97,7 +122,8 @@ export interface GameState {
   battleRunning: boolean
   battleTimeMs: number
   speedUp: boolean
-  /** Enemy lineup visible during prep phase */
   enemyPreview: EnemyPreview[]
+  /** Active arrow projectiles */
+  projectiles: Projectile[]
   log: string[]
 }

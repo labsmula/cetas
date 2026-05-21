@@ -1,68 +1,48 @@
 'use client'
 
 interface RoundModalProps {
-  show: boolean
-  title: string
-  titleColor: string
-  description: string
-  buttonLabel: string
-  onNext: () => void
+  show: boolean; title: string; titleColor: string
+  description: string; buttonLabel: string; onNext: () => void
 }
 
-export default function RoundModal({
-  show, title, titleColor, description, buttonLabel, onNext,
-}: RoundModalProps) {
+export default function RoundModal({ show, title, titleColor, description, buttonLabel, onNext }: RoundModalProps) {
   if (!show) return null
 
   const isWin = title.includes('Menang')
   const isGameOver = title.includes('Game Over')
+  const emoji = isGameOver ? '☠️' : isWin ? '🏆' : '😤'
+  const btnClass = isWin ? 'btn-gold' : 'btn-red'
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-5"
-      style={{ background: 'rgba(6,4,12,0.82)', backdropFilter: 'blur(4px)' }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
+      style={{ background: 'rgba(4,3,10,0.85)', backdropFilter: 'blur(6px)' }}
+      role="dialog" aria-modal="true" aria-labelledby="modal-title"
     >
-      <div className="anim-pop w-full max-w-[320px] rounded-2xl border border-[rgba(212,170,80,0.3)] bg-[#13111a] shadow-[0_0_60px_rgba(0,0,0,0.7)] overflow-hidden">
+      <div
+        className="anim-pop w-full max-w-[300px] rounded-2xl overflow-hidden"
+        style={{ background: 'var(--bg-panel)', border: '1px solid rgba(212,170,80,0.28)', boxShadow: '0 0 60px rgba(0,0,0,0.8)' }}
+      >
+        {/* Top accent bar */}
+        <div className="h-1 w-full" style={{ background: titleColor }} />
 
-        {/* Color band at top */}
-        <div
-          className="h-1.5 w-full"
-          style={{ background: titleColor }}
-        />
+        <div className="px-6 py-6 flex flex-col items-center gap-3 text-center">
+          <div className="text-[52px] leading-none">{emoji}</div>
 
-        <div className="px-6 py-5 flex flex-col items-center gap-3 text-center">
-          {/* Big emoji */}
-          <div className="text-[48px] leading-none mt-1">
-            {isGameOver ? '☠️' : isWin ? '🏆' : '😤'}
-          </div>
-
-          {/* Title */}
-          <h2
-            id="modal-title"
-            className="text-[22px] font-black leading-tight"
-            style={{ color: titleColor }}
-          >
-            {title.replace(/^[^\s]+\s/, '')} {/* strip emoji from title since we show it above */}
+          <h2 id="modal-title" className="text-[20px] font-black" style={{ color: titleColor }}>
+            {title.replace(/^[^\s]+\s/, '')}
           </h2>
 
-          {/* Description */}
-          <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+          <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
             {description}
           </p>
 
-          {/* Divider */}
-          <div className="w-full h-px bg-[rgba(255,255,255,0.07)]" />
+          <div className="w-full h-px" style={{ background: 'var(--border)' }} />
 
-          {/* CTA */}
           <button
             onClick={onNext}
             autoFocus
-            className={`btn w-full h-12 rounded-xl text-[13px] font-black ${
-              isWin ? 'btn-gold' : 'btn-red'
-            }`}
+            className={`btn ${btnClass} w-full h-12 rounded-xl text-[13px] font-black`}
           >
             {buttonLabel}
           </button>

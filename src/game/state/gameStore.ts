@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import type { GameState, SelectedSource, ShopItem } from '../core/types'
-import { emptyBoard, getBoardUnitCount, placeOnBoard, placeOnBench, COLS, ROWS } from '../systems/boardSystem'
+import { emptyBoard, getBoardUnitCount, placeOnBoard, placeOnBench } from '../systems/boardSystem'
 import { generateShop, checkMerge, buyUnit as buyUnitFn } from '../systems/shopSystem'
 import { generateEnemies, runBattleStep, evaluateBattleEnd, generateEnemyPreview } from '../systems/combatSystem'
 
@@ -48,6 +48,7 @@ function initialState(): GameState {
     battleTimeMs: 0,
     speedUp: false,
     enemyPreview: generateEnemyPreview(1, initialMaxSlots),
+    projectiles: [],
     log: ['Selamat datang! Lihat musuh di atas, susun formasi, lalu serang!'],
   }
 }
@@ -156,7 +157,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     if (!unit) return
-    const earn = Math.ceil(unit.cost / 2)
+
+    // Sell price = 50% of base cost (rounded down), stars don't inflate sell price
+    const earn = Math.max(1, Math.floor(unit.cost / 2))
 
     set(s => ({
       board: b,
@@ -183,12 +186,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       battleRunning: true,
       battleTimeMs: 0,
       speedUp: false,
+      projectiles: [],
       log: addLog(s.log, '⚔️ Pertempuran dimulai!'),
     }))
   },
 
   tickBattle(deltaMs: number) {
-    const { board, battleRunning, battleTimeMs, speedUp } = get()
+    const { board, battleRunning, battleTimeMs, speedUp, projectiles } = get()
     if (!battleRunning) return
 
     const BATTLE_LIMIT_MS = 30_000
@@ -196,36 +200,42 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const wasSpeedUp = speedUp
     const nowSpeedUp = newTimeMs >= BATTLE_LIMIT_MS
 
-    // Announce speed-up once
     if (!wasSpeedUp && nowSpeedUp) {
-      set(s => ({
-        speedUp: true,
-        battleTimeMs: newTimeMs,
-        log: addLog(s.log, '⚡ Waktu habis! Kecepatan 3×!'),
-      }))
+      set(s => ({ speedUp: true, battleTimeMs: newTimeMs, log: addLog(s.log, '⚡ Waktu habis! Kecepatan 3×!') }))
     } else {
       set({ battleTimeMs: newTimeMs, speedUp: nowSpeedUp })
     }
 
-    // Single step per RAF frame — speed-up is handled inside runBattleStep
-    // via speedMult (3× means 3× faster attack accumulation, not 3× more steps)
     const speedMult = nowSpeedUp ? 3 : 1
-    const { board: newBoard, ongoing } = runBattleStep(board, deltaMs, speedMult)
+    const { board: newBoard, ongoing, newProjectiles } = runBattleStep(board, deltaMs, speedMult)
+
+    // Advance existing projectiles + add new ones
+    const secElapsed = (deltaMs * speedMult) / 1000
+    const updatedProjectiles = [
+      ...projectiles.map(p => {
+        const dist = Math.hypot(p.tx - p.x, p.ty - p.y)
+        const step = p.speed * secElapsed
+        const newProgress = dist > 0 ? Math.min(1, p.progress + step / dist) : 1
+        return { ...p, progress: newProgress }
+      }).filter(p => p.progress < 1),
+      ...newProjectiles,
+    ]
 
     if (!ongoing) {
-      set({ board: newBoard, battleRunning: false })
+      set({ board: newBoard, battleRunning: false, projectiles: [] })
       get().endBattle()
     } else {
-      set({ board: newBoard })
+      set({ board: newBoard, projectiles: updatedProjectiles })
     }
   },
 
   endBattle() {
     const { board, round, maxBoardSlots, hp, gold } = get()
     const result = evaluateBattleEnd(board, round)
+    // Slot +1 always (win or lose) — capped at 7
+    const newSlots = Math.min(maxBoardSlots + 1, 7)
 
     if (result.win) {
-      const newSlots = Math.min(maxBoardSlots + result.slotsGained, 7)
       const newGold = Math.min(gold + result.goldEarned, 20)
       set(s => ({
         gold: newGold,
@@ -237,8 +247,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newHp = Math.max(0, hp - result.hpLost)
       set(s => ({
         hp: newHp,
+        maxBoardSlots: newSlots,
         battleRunning: false,
-        log: addLog(s.log, `😤 Ronde ${round} KALAH! −${result.hpLost} HP`),
+        log: addLog(s.log, `😤 Ronde ${round} KALAH! −${result.hpLost} HP, slot naik ke ${newSlots}`),
       }))
     }
   },
@@ -250,25 +261,53 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return
     }
 
-    // Clear enemy rows, heal surviving allies 25%
+    // Clear enemy rows.
+    // Ally units: dead ones revive to full HP (temporary death per round),
+    // surviving ones heal 25% of max HP.
     const newBoard = board.map((row, r) =>
       row.map((cell) => {
-        if (r < 2) return null
+        if (r < 2) return null          // clear enemy zone
         if (!cell) return null
-        if (cell.dead) return null
+        if (cell.enemy) return null
+
+        const healed = cell.dead
+          // Revive: full HP restore
+          ? cell.maxHp
+          // Survive: +25% HP
+          : Math.min(cell.maxHp, cell.curHp + Math.floor(cell.maxHp * 0.25))
+
         return {
           ...cell,
-          curHp: Math.min(cell.maxHp, cell.curHp + Math.floor(cell.maxHp * 0.25)),
+          curHp: healed,
+          dead: false,                  // revive
           anim: 0,
           animState: 'idle' as const,
           animFrame: 0,
           animElapsed: 0,
           animDone: false,
           attackTimer: 0,
+          moveTimer: 0,
           floats: [],
         }
       })
     )
+
+    // Also revive dead units on bench
+    const newBench = get().bench.map(u => {
+      if (!u || !u.dead) return u
+      return {
+        ...u,
+        curHp: u.maxHp,
+        dead: false,
+        animState: 'idle' as const,
+        animFrame: 0,
+        animElapsed: 0,
+        animDone: false,
+        attackTimer: 0,
+        moveTimer: 0,
+        floats: [],
+      }
+    })
 
     const nextRound = round + 1
     const newGold = Math.min(gold + 5, 20)
@@ -279,13 +318,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase: 'prep',
       gold: newGold,
       board: newBoard,
+      bench: newBench,
       shop: generateShop(),
       selected: null,
       battleRunning: false,
       battleTimeMs: 0,
       speedUp: false,
+      projectiles: [],
       enemyPreview: newEnemyPreview,
-      log: addLog(s.log, `📋 Ronde ${nextRound}. +5🪙 Toko diperbarui. Slot: ${maxBoardSlots}`),
+      log: addLog(s.log, `📋 Ronde ${nextRound}. +5🪙 Unit mati sudah pulih. Slot: ${maxBoardSlots}`),
     }))
   },
 
