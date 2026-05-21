@@ -10,40 +10,63 @@ interface RoundModalProps {
 }
 
 export default function RoundModal({
-  show,
-  title,
-  titleColor,
-  description,
-  buttonLabel,
-  onNext,
+  show, title, titleColor, description, buttonLabel, onNext,
 }: RoundModalProps) {
   if (!show) return null
 
+  const isWin = title.includes('Menang')
+  const isGameOver = title.includes('Game Over')
+
   return (
     <div
-      className="mt-1.5 min-h-[200px] bg-black/50 rounded-lg flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center px-5"
+      style={{ background: 'rgba(6,4,12,0.82)', backdropFilter: 'blur(4px)' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="bg-white dark:bg-zinc-900 rounded-xl px-7 py-5 text-center min-w-[220px] shadow-xl">
-        <h3
-          id="modal-title"
-          className="text-lg font-medium mb-1.5"
-          style={{ color: titleColor }}
-        >
-          {title}
-        </h3>
-        <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-3.5">
-          {description}
-        </p>
-        <button
-          onClick={onNext}
-          autoFocus
-          className="px-5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-[13px] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
-        >
-          {buttonLabel}
-        </button>
+      <div className="anim-pop w-full max-w-[320px] rounded-2xl border border-[rgba(212,170,80,0.3)] bg-[#13111a] shadow-[0_0_60px_rgba(0,0,0,0.7)] overflow-hidden">
+
+        {/* Color band at top */}
+        <div
+          className="h-1.5 w-full"
+          style={{ background: titleColor }}
+        />
+
+        <div className="px-6 py-5 flex flex-col items-center gap-3 text-center">
+          {/* Big emoji */}
+          <div className="text-[48px] leading-none mt-1">
+            {isGameOver ? '☠️' : isWin ? '🏆' : '😤'}
+          </div>
+
+          {/* Title */}
+          <h2
+            id="modal-title"
+            className="text-[22px] font-black leading-tight"
+            style={{ color: titleColor }}
+          >
+            {title.replace(/^[^\s]+\s/, '')} {/* strip emoji from title since we show it above */}
+          </h2>
+
+          {/* Description */}
+          <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+            {description}
+          </p>
+
+          {/* Divider */}
+          <div className="w-full h-px bg-[rgba(255,255,255,0.07)]" />
+
+          {/* CTA */}
+          <button
+            onClick={onNext}
+            autoFocus
+            className={`btn w-full h-12 rounded-xl text-[13px] font-black ${
+              isWin ? 'btn-gold' : 'btn-red'
+            }`}
+          >
+            {buttonLabel}
+          </button>
+        </div>
       </div>
     </div>
   )

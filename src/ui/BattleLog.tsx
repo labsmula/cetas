@@ -2,11 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 
-interface BattleLogProps {
-  log: string[]
-}
-
-export default function BattleLog({ log }: BattleLogProps) {
+export default function BattleLog({ log }: { log: string[] }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -16,13 +12,13 @@ export default function BattleLog({ log }: BattleLogProps) {
   return (
     <div
       ref={ref}
-      className="mt-1.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-lg border border-zinc-200 dark:border-zinc-700 px-2.5 py-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed min-h-[40px] max-h-[56px] overflow-y-auto"
+      className="rounded-xl border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.03)] px-3 py-2 text-[11px] text-[var(--text-secondary)] leading-relaxed min-h-[40px] max-h-[60px] overflow-y-auto scroll-x"
       role="log"
       aria-live="polite"
       aria-label="Log pertempuran"
     >
       {log.map((line, i) => (
-        <div key={i}>{line}</div>
+        <div key={i} className="py-[1px]">{line}</div>
       ))}
     </div>
   )

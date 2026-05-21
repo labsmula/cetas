@@ -323,6 +323,7 @@ interface PixiBoardProps {
   phase: 'prep' | 'battle'
   selected: SelectedSource
   maxBoardSlots: number
+  speedUp?: boolean
   onCellClick: (row: number, col: number) => void
 }
 
@@ -331,6 +332,7 @@ export default function PixiBoard({
   phase,
   selected,
   maxBoardSlots,
+  speedUp = false,
   onCellClick,
 }: PixiBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -369,10 +371,27 @@ export default function PixiBoard({
         : 16
       lastTimeRef.current = timestamp
 
+      // Animation clocks run 3× faster during speed-up to match combat
+      const animDelta = speedUp ? deltaMs * 3 : deltaMs
+
       ctx.clearRect(0, 0, BOARD_W, BOARD_H)
 
       // ── Arena background ──
       drawArena(ctx)
+
+      // ── Speed-up vignette overlay ──
+      if (speedUp) {
+        ctx.save()
+        const grad = ctx.createRadialGradient(
+          BOARD_W / 2, BOARD_H / 2, BOARD_H * 0.2,
+          BOARD_W / 2, BOARD_H / 2, BOARD_H * 0.8,
+        )
+        grad.addColorStop(0, 'rgba(255,120,0,0)')
+        grad.addColorStop(1, 'rgba(255,80,0,0.18)')
+        ctx.fillStyle = grad
+        ctx.fillRect(0, 0, BOARD_W, BOARD_H)
+        ctx.restore()
+      }
 
       // ── Grid lines (subtle) ──
       ctx.strokeStyle = 'rgba(255,255,255,0.06)'
@@ -406,9 +425,9 @@ export default function PixiBoard({
           const cx = c * CW + CW / 2
           const cy = r * CH + CH / 2
 
-          // Tick animation
+          // Tick animation — use animDelta so speed-up is visible
           const clock = getClock(u.uid, u.animState ?? 'idle')
-          const frame = tickClock(clock, u, deltaMs)
+          const frame = tickClock(clock, u, animDelta)
 
           drawUnit(ctx, u, frame, cx, cy)
 
@@ -420,9 +439,18 @@ export default function PixiBoard({
           drawFloats(ctx, u, cx, cy)
         }
       }
+
+      // ── Speed-up label ──
+      if (speedUp) {
+        ctx.save()
+        ctx.font = 'bold 11px sans-serif'
+        ctx.fillStyle = 'rgba(255,160,40,0.9)'
+        ctx.fillText('⚡ 3× SPEED', BOARD_W - 80, 14)
+        ctx.restore()
+      }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [board, phase, selected, maxBoardSlots, boardUnitCount],
+    [board, phase, selected, maxBoardSlots, boardUnitCount, speedUp],
   )
 
   useEffect(() => {
@@ -470,6 +498,7 @@ export default function PixiBoard({
 }
 
 // ─── Mini preview for shop / bench ───────────────────────────────────────────
+// Always renders the IDLE frame — never hurt/death/attack.
 
 export function drawUnitPreview(
   canvas: HTMLCanvasElement,
@@ -483,11 +512,13 @@ export function drawUnitPreview(
   const key = unit.spriteType ? getSpriteKey(unit.spriteType, false) : null
   if (key && SPRITE_SHEETS[key]) {
     const sheet = SPRITE_SHEETS[key]
+    // Always use idle clip for previews
     const clip = sheet.clips.idle
     const img = loadImg(clip.url)
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
+      // Draw frame 0 of idle
       ctx.drawImage(img, 0, 0, clip.frameW, clip.frameH, 2, 2, size, size)
       if (unit.stars > 1) {
         ctx.fillStyle = '#fbbf24'

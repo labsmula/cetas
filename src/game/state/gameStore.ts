@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import type { GameState, SelectedSource, ShopItem } from '../core/types'
 import { emptyBoard, getBoardUnitCount, placeOnBoard, placeOnBench, COLS, ROWS } from '../systems/boardSystem'
 import { generateShop, checkMerge, buyUnit as buyUnitFn } from '../systems/shopSystem'
-import { generateEnemies, runBattleStep, evaluateBattleEnd } from '../systems/combatSystem'
+import { generateEnemies, runBattleStep, evaluateBattleEnd, generateEnemyPreview } from '../systems/combatSystem'
 
 const MAX_LOG = 5
 
@@ -33,12 +33,13 @@ interface GameActions {
 export type GameStore = GameState & GameActions
 
 function initialState(): GameState {
+  const initialMaxSlots = 3
   return {
     round: 1,
     hp: 100,
     gold: 10,
     phase: 'prep',
-    maxBoardSlots: 3,
+    maxBoardSlots: initialMaxSlots,
     board: emptyBoard(),
     bench: Array(8).fill(null),
     shop: generateShop(),
@@ -46,7 +47,8 @@ function initialState(): GameState {
     battleRunning: false,
     battleTimeMs: 0,
     speedUp: false,
-    log: ['Selamat datang! Beli unit, susun formasi, lalu serang!'],
+    enemyPreview: generateEnemyPreview(1, initialMaxSlots),
+    log: ['Selamat datang! Lihat musuh di atas, susun formasi, lalu serang!'],
   }
 }
 
@@ -198,28 +200,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!wasSpeedUp && nowSpeedUp) {
       set(s => ({
         speedUp: true,
+        battleTimeMs: newTimeMs,
         log: addLog(s.log, '⚡ Waktu habis! Kecepatan 3×!'),
       }))
     } else {
       set({ battleTimeMs: newTimeMs, speedUp: nowSpeedUp })
     }
 
-    // Run 1 tick normally, or 3 ticks when sped up
-    const ticks = nowSpeedUp ? 3 : 1
-    let currentBoard = board
-    let ongoing = true
-
-    for (let i = 0; i < ticks; i++) {
-      const result = runBattleStep(currentBoard)
-      currentBoard = result.board
-      if (!result.ongoing) { ongoing = false; break }
-    }
+    // Single step per RAF frame — speed-up is handled inside runBattleStep
+    // via speedMult (3× means 3× faster attack accumulation, not 3× more steps)
+    const speedMult = nowSpeedUp ? 3 : 1
+    const { board: newBoard, ongoing } = runBattleStep(board, deltaMs, speedMult)
 
     if (!ongoing) {
-      set({ board: currentBoard, battleRunning: false })
+      set({ board: newBoard, battleRunning: false })
       get().endBattle()
     } else {
-      set({ board: currentBoard })
+      set({ board: newBoard })
     }
   },
 
@@ -275,6 +272,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const nextRound = round + 1
     const newGold = Math.min(gold + 5, 20)
+    const newEnemyPreview = generateEnemyPreview(nextRound, maxBoardSlots)
 
     set(s => ({
       round: nextRound,
@@ -286,6 +284,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       battleRunning: false,
       battleTimeMs: 0,
       speedUp: false,
+      enemyPreview: newEnemyPreview,
       log: addLog(s.log, `📋 Ronde ${nextRound}. +5🪙 Toko diperbarui. Slot: ${maxBoardSlots}`),
     }))
   },

@@ -1,26 +1,298 @@
 @import "tailwindcss";
 
+/* ─── Design tokens ──────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-deep:    #0c0a0e;
+  --bg-mid:     #13111a;
+  --bg-surface: #1c1826;
+  --bg-card:    #221e30;
+  --border:     rgba(255,255,255,0.08);
+  --border-gold:rgba(212,170,80,0.45);
+  --gold:       #d4aa50;
+  --gold-bright:#f0cc70;
+  --gold-dim:   #8a6e30;
+  --blue-ally:  #4a9eff;
+  --red-enemy:  #ff5a5a;
+  --green-ok:   #4ade80;
+  --text-primary:   #f0ead8;
+  --text-secondary: #9a8f7a;
+  --text-muted:     #5a5248;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ─── Reset ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { height: 100%; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* ─── Scrollable wrapper ─────────────────────────────────────────────────────── */
+.game-scroll {
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.game-scroll::-webkit-scrollbar { display: none; }
+
+/* ─── Page backgrounds ───────────────────────────────────────────────────────── */
+.home-bg {
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -5%, rgba(212,170,80,0.15) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(74,158,255,0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #0f0c18 0%, #080610 100%);
+}
+
+.page-bg {
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 90% 30% at 50% -10%, rgba(212,170,80,0.14) 0%, transparent 55%),
+    linear-gradient(180deg, #0f0c18 0%, #080610 100%);
+}
+
+.game-bg {
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 100% 30% at 50% 0%, rgba(212,170,80,0.08) 0%, transparent 40%),
+    linear-gradient(180deg, #0f0c18 0%, #080610 100%);
+}
+
+/* ─── Cards / surfaces ───────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.panel {
+  background: linear-gradient(160deg, #1e1a2c 0%, #181424 100%);
+  border: 1px solid rgba(212,170,80,0.22);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+
+.panel-dark {
+  background: #0f0d14;
+  border: 1px solid rgba(212,170,80,0.22);
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(212,170,80,0.08) inset;
+}
+
+.card-gold {
+  background: linear-gradient(135deg, #1e1a28 0%, #221e2e 100%);
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(212,170,80,0.08) inset, 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* ─── Pixel rendering ────────────────────────────────────────────────────────── */
+.pixel { image-rendering: pixelated; }
+
+/* ─── Scroll row ─────────────────────────────────────────────────────────────── */
+.scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.scroll-x::-webkit-scrollbar { display: none; }
+
+.scroll-row {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll-row::-webkit-scrollbar { display: none; }
+
+.section-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: transform 0.08s ease, filter 0.08s ease, box-shadow 0.08s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+.btn:active  { transform: scale(0.94); filter: brightness(0.88); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+/* Blue — reroll / secondary */
+.btn-blue {
+  background: linear-gradient(180deg, #3a7fd4 0%, #2460a8 100%);
+  color: #e8f4ff;
+  box-shadow: 0 2px 0 #1a3f70, 0 4px 12px rgba(36,96,168,0.35);
+  border: 1px solid rgba(100,180,255,0.25);
+}
+.btn-blue:active { box-shadow: 0 0 0 #1a3f70; }
+
+/* Red — battle / danger */
+.btn-red {
+  background: linear-gradient(180deg, #d44040 0%, #a82424 100%);
+  color: #fff0f0;
+  box-shadow: 0 2px 0 #6e1414, 0 4px 12px rgba(168,36,36,0.4);
+  border: 1px solid rgba(255,120,120,0.2);
+}
+.btn-red:active { box-shadow: 0 0 0 #6e1414; }
+
+.btn-sm-red {
+  background: linear-gradient(180deg, #cf6d52 0%, #a24c35 100%);
+  color: #fff3ee;
+  box-shadow: 0 2px 0 #6a2f1f;
+  border: 1px solid rgba(255,140,120,0.24);
+}
+.btn-sm-red:active { box-shadow: 0 0 0 #6a2f1f; }
+
+/* Gold — primary CTA */
+.btn-gold {
+  background: linear-gradient(180deg, #d4aa50 0%, #a87c28 100%);
+  color: #1a1208;
+  font-weight: 800;
+  box-shadow: 0 2px 0 #6e4e10, 0 4px 16px rgba(212,170,80,0.35);
+  border: 1px solid rgba(255,220,100,0.3);
+}
+.btn-gold:active { box-shadow: 0 0 0 #6e4e10; }
+
+/* Ghost — subtle */
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+/* ─── Stat chip ──────────────────────────────────────────────────────────────── */
+.stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 5px 4px 4px;
+  gap: 1px;
+  min-width: 0;
+}
+.stat-chip .label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.stat-chip .value {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* ─── HP bar ─────────────────────────────────────────────────────────────────── */
+.hp-track {
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.hp-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.hp-bar-track {
+  height: 6px;
+  background: rgba(132,95,61,0.28);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c74242 0%, #7fd36a 100%);
+  transition: width 0.35s ease;
+}
+
+/* ─── Phase badge ────────────────────────────────────────────────────────────── */
+.phase-prep   { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+.phase-battle { background: rgba(255,90,90,0.15);  color: #ff7070; border: 1px solid rgba(255,90,90,0.3); }
+
+/* ─── Unit card (shop / bench) ───────────────────────────────────────────────── */
+.unit-card {
+  background: linear-gradient(160deg, #1e1a2c 0%, #181424 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  transition: transform 0.08s, border-color 0.12s, box-shadow 0.12s;
+}
+.unit-card:active { transform: scale(0.93); }
+.unit-card.available:hover {
+  border-color: rgba(212,170,80,0.5);
+  box-shadow: 0 0 12px rgba(212,170,80,0.15);
+}
+.unit-card.selected {
+  border-color: var(--blue-ally);
+  box-shadow: 0 0 0 2px rgba(74,158,255,0.3);
+}
+.unit-card.sold { opacity: 0.3; }
+
+/* ─── Section header ─────────────────────────────────────────────────────────── */
+.section-header {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ─── Timer bar ──────────────────────────────────────────────────────────────── */
+.timer-track {
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ─── Divider ────────────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,170,80,0.2), transparent);
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes fadeUp  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+@keyframes popIn   { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+@keyframes pulse   { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+@keyframes glow    { 0%,100% { box-shadow:0 0 8px rgba(212,170,80,0.3); } 50% { box-shadow:0 0 20px rgba(212,170,80,0.6); } }
+@keyframes stripe  { from { background-position:0 0; } to { background-position:16px 0; } }
+@keyframes float   { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+@keyframes shimmer { 0%,100% { opacity:1; } 50% { opacity:0.62; } }
+
+.anim-fade-up { animation: fadeUp 0.3s ease both; }
+.anim-pop     { animation: popIn  0.25s cubic-bezier(0.34,1.56,0.64,1) both; }
+.anim-pulse   { animation: pulse  1.2s ease-in-out infinite; }
+.anim-glow    { animation: glow   2s ease-in-out infinite; }
+.anim-float   { animation: float  3s ease-in-out infinite; }
+.anim-shimmer { animation: shimmer 0.9s ease-in-out infinite; }

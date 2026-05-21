@@ -73,8 +73,8 @@ function sheet(
 
 // ─── Sprite sheets ────────────────────────────────────────────────────────────
 
-const BLUE = '/sprites/blue'
-const RED  = '/sprites/red'
+const BLUE = '/assets/units/blue'
+const RED  = '/assets/units/red'
 
 export const SPRITE_SHEETS: Record<string, SpriteSheet> = {
   // warrior has a real hurt.png
@@ -100,29 +100,27 @@ export function getSpriteKey(spriteType: string, isEnemy: boolean): string {
 // ─── Terrain ─────────────────────────────────────────────────────────────────
 
 export const TERRAIN = {
-  tilemap:   '/sprites/terrain/tilemap.png',
-  waterBg:   '/sprites/terrain/water-bg.png',
-  waterFoam: '/sprites/terrain/water-foam.png',
-  bush1:     '/sprites/terrain/bush1.png',
-  bush2:     '/sprites/terrain/bush2.png',
-  rock1:     '/sprites/terrain/rock1.png',
-  rock2:     '/sprites/terrain/rock2.png',
+  tilemap:   '/assets/terrain/tilemap.png',
+  waterBg:   '/assets/terrain/water-bg.png',
+  waterFoam: '/assets/terrain/water-foam.png',
+  bush1:     '/assets/terrain/bush1.png',
+  bush2:     '/assets/terrain/bush2.png',
+  rock1:     '/assets/terrain/rock1.png',
+  rock2:     '/assets/terrain/rock2.png',
 }
 
 // ─── Particle FX ─────────────────────────────────────────────────────────────
 
 export const FX = {
-  explosion: { url: '/sprites/fx/explosion.png', frames: 8, fps: 60, frameW: 192, frameH: 192 },
-  dust:      { url: '/sprites/fx/dust.png',      frames: 8, fps: 50, frameW: 64,  frameH: 64  },
-  fire:      { url: '/sprites/fx/fire.png',      frames: 8, fps: 80, frameW: 64,  frameH: 64  },
+  explosion: { url: '/assets/fx/explosion.png', frames: 8, fps: 60, frameW: 192, frameH: 192 },
+  dust:      { url: '/assets/fx/dust.png',      frames: 8, fps: 50, frameW: 64,  frameH: 64  },
+  fire:      { url: '/assets/fx/fire.png',      frames: 8, fps: 80, frameW: 64,  frameH: 64  },
 }
 
 // ─── UI ──────────────────────────────────────────────────────────────────────
 
 export const UI_ASSETS = {
-  barBase:   '/sprites/ui/bar-base.png',
-  barFill:   '/sprites/ui/bar-fill.png',
-  woodTable: '/sprites/ui/wood-table.png',
-  woodSlots: '/sprites/ui/wood-slots.png',
-  banner:    '/sprites/ui/banner.png',
+  woodSlots: '/assets/ui/wood-slots.png',
+  btnBlue:   '/assets/ui/btn-blue.png',
+  btnRed:    '/assets/ui/btn-red.png',
 }

@@ -16,6 +16,10 @@ export interface UnitDef {
   trait: UnitTrait
   /** Which Tiny Swords sprite sheet this unit uses */
   spriteType: SpriteType
+  /** Human avatar index (01–25) for shop/bench display */
+  avatarIndex: string
+  /** Trait description shown in UI */
+  traitLabel: string
   /** 5×4 pixel body map — fallback if sprite not loaded */
   body: number[][]
 }
@@ -24,21 +28,25 @@ export const UNIT_DEFS: UnitDef[] = [
   {
     id: 'warrior', name: 'Prajurit', cost: 1, atk: 28, hp: 120, spd: 1.0,
     color: '#378ADD', accent: '#B5D4F4', trait: 'melee', spriteType: 'warrior',
+    avatarIndex: '03', traitLabel: 'Melee',
     body: [[0,1,1,0],[1,1,1,1],[0,1,1,0],[0,1,0,0],[1,0,0,1]],
   },
   {
     id: 'archer', name: 'Pemanah', cost: 1, atk: 22, hp: 75, spd: 1.3,
     color: '#639922', accent: '#C0DD97', trait: 'ranged', spriteType: 'archer',
+    avatarIndex: '07', traitLabel: 'Ranged',
     body: [[0,1,1,0],[1,1,1,1],[0,1,1,0],[0,0,1,0],[0,1,1,1]],
   },
   {
     id: 'knight', name: 'Ksatria', cost: 2, atk: 18, hp: 200, spd: 0.65,
     color: '#888780', accent: '#D3D1C7', trait: 'tank', spriteType: 'lancer',
+    avatarIndex: '12', traitLabel: 'Tank',
     body: [[1,1,1,1],[1,1,1,1],[0,1,1,0],[0,1,1,0],[1,1,1,1]],
   },
   {
     id: 'rogue', name: 'Pencuri', cost: 1, atk: 38, hp: 65, spd: 1.6,
     color: '#D4537E', accent: '#F4C0D1', trait: 'melee', spriteType: 'pawn',
+    avatarIndex: '18', traitLabel: 'Assassin',
     body: [[0,1,1,0],[1,1,1,1],[0,1,1,0],[1,0,0,1],[0,1,1,0]],
   },
 ]

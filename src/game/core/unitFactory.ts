@@ -19,6 +19,8 @@ export function makeUnit(def: UnitDef, stars: 1 | 2 | 3 = 1, enemy = false): Uni
     enemy,
     trait: def.trait,
     spriteType: def.spriteType,
+    avatarIndex: def.avatarIndex,
+    traitLabel: def.traitLabel,
     maxHp: Math.round(def.hp * multiplier),
     curHp: Math.round(def.hp * multiplier),
     atkVal: Math.round(def.atk * multiplier),
@@ -26,12 +28,10 @@ export function makeUnit(def: UnitDef, stars: 1 | 2 | 3 = 1, enemy = false): Uni
     color: def.color,
     accent: def.accent,
     body: def.body,
-    // sprite animation state
     animState: 'idle',
     animFrame: 0,
     animElapsed: 0,
     animDone: false,
-    // legacy
     anim: 0,
     animDir: 1,
     shake: 0,

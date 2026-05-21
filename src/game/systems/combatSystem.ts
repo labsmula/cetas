@@ -1,8 +1,35 @@
 // Combat simulation — pure logic, no rendering
 import { UNIT_DEFS } from '../entities/unitDefs'
 import { makeUnit } from '../core/unitFactory'
-import type { BoardGrid, Unit } from '../core/types'
-import { COLS, ROWS, getAllUnits } from './boardSystem'
+import type { BoardGrid, EnemyPreview } from '../core/types'
+import { COLS, getAllUnits } from './boardSystem'
+
+/** Generate enemy preview list for a given round (deterministic-ish, used in prep phase) */
+export function generateEnemyPreview(round: number, maxBoardSlots: number): EnemyPreview[] {
+  const maxEnemy = Math.min(maxBoardSlots + 1, 6)
+  const count = Math.min(2 + round, maxEnemy)
+  const tier = Math.min(Math.floor(round / 2), 2)
+  const pool = UNIT_DEFS.filter(u => u.cost <= 1 + tier)
+  const previews: EnemyPreview[] = []
+
+  // Use a seeded-ish approach: pick evenly from pool for preview
+  for (let i = 0; i < count; i++) {
+    const def = pool[i % pool.length]
+    const stars: 1 | 2 = round >= 4 && i % 3 === 0 ? 2 : 1
+    const m = stars === 2 ? 1.8 : 1
+    previews.push({
+      id: def.id,
+      name: def.name,
+      stars,
+      atk: Math.round(def.atk * m),
+      hp: Math.round(def.hp * m),
+      spd: def.spd,
+      avatarIndex: def.avatarIndex,
+      traitLabel: def.traitLabel,
+    })
+  }
+  return previews
+}
 
 /** Populate enemy rows (0–1) with scaled enemies for the given round */
 export function generateEnemies(board: BoardGrid, round: number, maxBoardSlots: number): BoardGrid {
@@ -37,14 +64,20 @@ export interface BattleStepResult {
   ongoing: boolean
 }
 
-/** Run one tick of combat — mutates unit state in-place for performance */
-export function runBattleStep(board: BoardGrid): BattleStepResult {
+/** Run one tick of combat — mutates unit state in-place for performance.
+ *  deltaMs: real elapsed ms (used for time-based attack pacing).
+ *  speedMult: 1 = normal, 3 = speed-up mode.
+ */
+export function runBattleStep(board: BoardGrid, deltaMs = 16, speedMult = 1): BattleStepResult {
   const all = getAllUnits(board)
   const alive = all.filter(x => !x.u.dead)
   const allies = alive.filter(x => !x.u.enemy)
   const enemies = alive.filter(x => x.u.enemy)
 
   if (!allies.length || !enemies.length) return { board, ongoing: false }
+
+  // Effective time advance — speed-up multiplies perceived time
+  const effectiveDelta = deltaMs * speedMult
 
   // Tick animation state machine for each unit
   alive.forEach(x => {
@@ -73,9 +106,11 @@ export function runBattleStep(board: BoardGrid): BattleStepResult {
     }
   })
 
-  // Attack
+  // Attack pacing: spd is attacks-per-second.
+  // attackTimer accumulates seconds; fires when >= 1.
+  const secondsElapsed = effectiveDelta / 1000
   alive.forEach(x => {
-    x.u.attackTimer += x.u.spd
+    x.u.attackTimer += x.u.spd * secondsElapsed
     if (x.u.attackTimer < 1) return
     x.u.attackTimer -= 1
 
