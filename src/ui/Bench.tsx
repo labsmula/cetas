@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { cn } from '@/src/lib/utils'
 import type { BenchSlots, SelectedSource } from '../game/core/types'
 
 interface BenchProps {
@@ -14,11 +15,11 @@ export default function Bench({ bench, selected, onSlotClick }: BenchProps) {
 
   return (
     <div className="surface px-3 py-2.5">
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-2 flex items-center justify-between">
         <span className="label">Bangku</span>
-        <span className="text-[9px]" style={{ color: 'var(--text-3)' }}>{filled}/8</span>
+        <span className="text-[9px] text-[var(--text-3)]">{filled}/8</span>
       </div>
-      <div className="flex gap-1.5 scroll-x pb-0.5">
+      <div className="scroll-x flex gap-1.5 pb-0.5">
         {bench.map((unit, i) => {
           const isSel = selected?.src === 'bench' && (selected as { src: 'bench'; idx: number }).idx === i
           return <BenchSlot key={i} unit={unit} isSelected={isSel} onClick={() => onSlotClick(i)} />
@@ -33,34 +34,33 @@ function BenchSlot({ unit, isSelected, onClick }: { unit: BenchSlots[number]; is
     <button
       onClick={onClick}
       title={unit ? `${unit.name} ⭐${unit.stars} | ATK:${unit.atkVal} HP:${unit.curHp}` : 'Kosong'}
-      className="flex-shrink-0 w-[58px] h-[66px] rounded-xl flex flex-col items-center justify-center gap-0.5 transition-transform"
-      style={unit
-        ? isSelected
-          ? { border: '2px solid var(--ally)', background: 'rgba(74,158,255,0.12)', transform: 'scale(1.06)' }
-          : { border: '1px solid rgba(74,158,255,0.3)', background: 'rgba(74,158,255,0.05)' }
-        : { border: '1px dashed rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }
-      }
+      className={cn(
+        'flex flex-shrink-0 h-[66px] w-[58px] flex-col items-center justify-center gap-0.5 rounded-xl transition-transform',
+        !unit && 'border border-dashed border-white/10 bg-white/2',
+        unit && !isSelected && 'border border-[rgba(74,158,255,0.3)] bg-[rgba(74,158,255,0.05)]',
+        unit && isSelected && 'scale-[1.06] border-2 border-[var(--ally)] bg-[rgba(74,158,255,0.12)]'
+      )}
       aria-label={unit ? `${unit.name} bintang ${unit.stars}` : 'Slot kosong'}
       aria-pressed={isSelected}
     >
       {unit ? (
         <>
-          <div className="relative w-9 h-9 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(74,158,255,0.35)' }}>
-            <Image src={`/assets/ui/avatars/avatar-${unit.avatarIndex}.png`} alt={unit.name} width={64} height={64} className="pixel w-full h-full object-cover" />
+          <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-[rgba(74,158,255,0.35)]">
+            <Image src={`/assets/ui/avatars/avatar-${unit.avatarIndex}.png`} alt={unit.name} width={64} height={64} className="pixel h-full w-full object-cover" />
             {unit.stars > 1 && (
-              <div className="absolute bottom-0 right-0 rounded-tl px-0.5 text-[7px] font-bold leading-tight" style={{ background: 'rgba(0,0,0,0.75)', color: '#fbbf24' }}>
+              <div className="absolute bottom-0 right-0 rounded-tl bg-black/75 px-0.5 text-[7px] font-bold leading-tight text-[#fbbf24]">
                 {'★'.repeat(unit.stars)}
               </div>
             )}
           </div>
-          <span className="text-[8px] font-bold text-center leading-none px-0.5" style={{ color: 'var(--text)' }}>{unit.name}</span>
+          <span className="px-0.5 text-center text-[8px] font-bold leading-none text-[var(--text)]">{unit.name}</span>
           <div className="flex gap-1 text-[7px]">
-            <span style={{ color: '#f87171' }}>⚔{unit.atkVal}</span>
-            <span style={{ color: '#f9a8d4' }}>❤{unit.curHp}</span>
+            <span className="text-[var(--stat-atk)]">⚔{unit.atkVal}</span>
+            <span className="text-[var(--stat-hp)]">❤{unit.curHp}</span>
           </div>
         </>
       ) : (
-        <span className="text-[20px]" style={{ color: 'rgba(255,255,255,0.08)' }}>+</span>
+        <span className="text-[20px] text-white/8">+</span>
       )}
     </button>
   )
