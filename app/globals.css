@@ -4,31 +4,31 @@
 /* ─── Design tokens ──────────────────────────────────────────────────────────── */
 :root {
   /* Surface */
-  --bg: #f3dca8;
-  --bg-panel: rgba(255, 244, 214, 0.78);
-  --bg-card: rgba(255, 238, 196, 0.84);
-  --bg-hover: rgba(255, 225, 150, 0.88);
+  --bg: #f8e9c5;
+  --bg-panel: rgba(255, 248, 228, 0.9);
+  --bg-card: rgba(255, 242, 206, 0.92);
+  --bg-hover: rgba(255, 232, 170, 0.94);
 
   /* Text */
-  --text-1: #3a2411;
-  --text-2: #6b4a22;
-  --text-3: #8f6d3c;
-  --text: #3a2411;
+  --text-1: #2f1c0d;
+  --text-2: #5e3d1d;
+  --text-3: #7e5a2b;
+  --text: #2f1c0d;
 
   /* Brand / Accent */
-  --gold: #e7b64f;
-  --gold-hi: #fff0b8;
-  --gold-lo: #b67a20;
-  --gold-dim: #b67a20;
-  --gold-glow: rgba(231, 182, 79, 0.34);
-  --ally: #3f86e8;
-  --enemy: #e35c48;
-  --ok: #2d9b67;
-  --warn: #d38a13;
+  --gold: #d89422;
+  --gold-hi: #fff3b6;
+  --gold-lo: #9b6414;
+  --gold-dim: #b97818;
+  --gold-glow: rgba(235, 171, 47, 0.4);
+  --ally: #2478d7;
+  --enemy: #d64f3c;
+  --ok: #238653;
+  --warn: #c77a0d;
 
   /* Border */
-  --border: rgba(95, 58, 16, 0.18);
-  --border-gold: rgba(167, 104, 21, 0.45);
+  --border: rgba(120, 74, 22, 0.26);
+  --border-gold: rgba(181, 118, 28, 0.52);
 
   /* Typography */
   --font-display: 'Cinzel', serif;
@@ -112,7 +112,7 @@ body {
 .landing-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 8, 16, 0.28) 0%, rgba(10, 8, 16, 0.45) 58%, rgba(10, 8, 16, 0.72) 100%);
+  background: linear-gradient(180deg, rgba(48, 31, 12, 0.10) 0%, rgba(68, 42, 12, 0.18) 58%, rgba(48, 28, 8, 0.36) 100%);
   pointer-events: none;
 }
 
@@ -261,8 +261,8 @@ body {
 .game-bg {
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse 120% 35% at 50% -5%, rgba(212, 170, 80, 0.08) 0%, transparent 50%),
-    linear-gradient(180deg, #0d0a18 0%, #070510 100%);
+    radial-gradient(ellipse 120% 38% at 50% -5%, rgba(255, 224, 140, 0.22) 0%, transparent 54%),
+    linear-gradient(180deg, #f3dfb4 0%, #ead1a0 100%);
 }
 
 .game-scroll {
