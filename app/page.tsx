@@ -10,6 +10,12 @@ const PREVIEW_UNITS = [
   { src: '/assets/ui/avatars/avatar-02.png', name: 'Archer' },
   { src: '/assets/ui/avatars/avatar-03.png', name: 'Lancer' },
   { src: '/assets/ui/avatars/avatar-04.png', name: 'Pawn' },
+  { src: '/assets/ui/avatars/avatar-05.png', name: 'Warrior' },
+  { src: '/assets/ui/avatars/avatar-06.png', name: 'Archer' },
+  { src: '/assets/ui/avatars/avatar-07.png', name: 'Lancer' },
+  { src: '/assets/ui/avatars/avatar-08.png', name: 'Pawn' },
+  { src: '/assets/ui/avatars/avatar-09.png', name: 'Warrior' },
+  { src: '/assets/ui/avatars/avatar-10.png', name: 'Archer' },
 ]
 
 export default function Home() {
@@ -41,7 +47,7 @@ export default function Home() {
         <section className="px-4">
           <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <div className="grid grid-cols-4 gap-0">
+              <div className="grid grid-cols-5 gap-0">
                 {PREVIEW_UNITS.map((unit) => (
                   <div key={unit.name} className="relative aspect-square border-r border-[var(--border)] last:border-r-0">
                     <Image src={unit.src} alt={unit.name} fill className="object-contain p-2" />
