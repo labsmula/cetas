@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { Heart, Swords } from 'lucide-react'
 import { cn } from '@/src/lib/utils'
 import type { ShopItem } from '../game/core/types'
 
@@ -58,8 +59,8 @@ function ShopCard({ item, onBuy }: { item: ShopItem; onBuy: () => void }) {
       <span className="text-[8px] font-semibold" style={{ color: tc }}>{item.traitLabel}</span>
 
       <div className="flex gap-1.5 text-[8px]">
-        <span className="text-[var(--stat-atk)]">⚔{item.atk}</span>
-        <span className="text-[var(--stat-hp)]">❤{item.hp}</span>
+        <span className="inline-flex items-center gap-0.5 text-[var(--stat-atk)]"><Swords className="h-2.5 w-2.5" />{item.atk}</span>
+        <span className="inline-flex items-center gap-0.5 text-[var(--stat-hp)]"><Heart className="h-2.5 w-2.5" />{item.hp}</span>
       </div>
 
       <div className="flex items-center gap-0.5 rounded-full border border-[rgba(212,170,80,0.28)] bg-[rgba(212,170,80,0.15)] px-2 py-[2px]">
@@ -69,3 +70,4 @@ function ShopCard({ item, onBuy }: { item: ShopItem; onBuy: () => void }) {
     </button>
   )
 }
+

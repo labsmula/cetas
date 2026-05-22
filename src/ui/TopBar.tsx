@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/src/lib/utils'
+import { Settings, Swords } from 'lucide-react'
 import type { GamePhase } from '../game/core/types'
 
 interface TopBarProps {
@@ -16,7 +17,7 @@ export default function TopBar({ round, hp, gold, boardUnitCount, maxBoardSlots,
   const isPrep = phase === 'prep'
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="relic-frame flex items-center gap-2 rounded-xl px-2 py-1.5">
       <Link
         href="/"
         className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-[rgba(212,170,80,0.25)] bg-white/5 text-lg font-bold text-[var(--gold)]"
@@ -57,13 +58,13 @@ export default function TopBar({ round, hp, gold, boardUnitCount, maxBoardSlots,
       {/* Phase */}
       <div
         className={cn(
-          'rounded-lg px-2 py-1 text-[9px] font-extrabold uppercase tracking-widest',
+          'flex items-center gap-1 rounded-lg px-2 py-1 text-[9px] font-extrabold uppercase tracking-widest',
           isPrep
             ? 'border bg-[var(--prep-bg)] text-[var(--prep-text)] border-[var(--prep-border)]'
             : 'border bg-[var(--battle-bg)] text-[var(--battle-text)] border-[var(--battle-border)]'
         )}
       >
-        {isPrep ? '⚙ Prep' : '⚔ Battle'}
+        {isPrep ? (<><Settings className="h-3 w-3" /> Prep</>) : (<><Swords className="h-3 w-3" /> Battle</>)}
       </div>
     </div>
   )

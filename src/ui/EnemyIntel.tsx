@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { AlertTriangle, Heart, Shield, Swords, Zap } from 'lucide-react'
 import { cn } from '@/src/lib/utils'
 import type { EnemyPreview } from '../game/core/types'
 
@@ -32,7 +33,7 @@ export default function EnemyIntel({ enemies, round }: EnemyIntelProps) {
     <div className="surface-gold anim-fade-up px-3 py-2.5">
       <div className="mb-2.5 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px]">⚠️</span>
+          <AlertTriangle className="h-3.5 w-3.5 text-[var(--warn)]" />
           <span className="label">Musuh Ronde {round}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -50,7 +51,7 @@ export default function EnemyIntel({ enemies, round }: EnemyIntelProps) {
 
 function EnemyCard({ enemy }: { enemy: EnemyPreview }) {
   const ts = TRAIT_MAP[enemy.traitLabel] ?? TRAIT_MAP.Melee
-  const spdLabel = enemy.spd >= 1.4 ? '⚡Fast' : enemy.spd >= 0.9 ? 'Normal' : '🐢Slow'
+  const spdLabel = enemy.spd >= 1.4 ? 'Fast' : enemy.spd >= 0.9 ? 'Normal' : 'Slow'
 
   return (
     <div className="flex w-[76px] flex-shrink-0 flex-col items-center gap-1 rounded-xl border border-[rgba(255,90,90,0.2)] bg-white/3 px-1.5 py-2">
@@ -73,10 +74,11 @@ function EnemyCard({ enemy }: { enemy: EnemyPreview }) {
       </span>
 
       <div className="flex gap-1.5 text-[8px]">
-        <span className="text-[var(--stat-atk)]">⚔{enemy.atk}</span>
-        <span className="text-[var(--stat-hp)]">❤{enemy.hp}</span>
+        <span className="inline-flex items-center gap-0.5 text-[var(--stat-atk)]"><Swords className="h-2.5 w-2.5" />{enemy.atk}</span>
+        <span className="inline-flex items-center gap-0.5 text-[var(--stat-hp)]"><Heart className="h-2.5 w-2.5" />{enemy.hp}</span>
       </div>
-      <span className="text-[7px] text-[var(--text-3)]">{spdLabel}</span>
+      <span className="inline-flex items-center gap-0.5 text-[7px] text-[var(--text-3)]">{enemy.spd >= 1.4 && <Zap className="h-2.5 w-2.5" />} {enemy.spd < 0.9 && <Shield className="h-2.5 w-2.5" />} {spdLabel}</span>
     </div>
   )
 }
+

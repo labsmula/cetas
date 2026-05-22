@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { Heart, Swords } from 'lucide-react'
 import { cn } from '@/src/lib/utils'
 import type { BenchSlots, SelectedSource } from '../game/core/types'
 
@@ -55,8 +56,8 @@ function BenchSlot({ unit, isSelected, onClick }: { unit: BenchSlots[number]; is
           </div>
           <span className="px-0.5 text-center text-[8px] font-bold leading-none text-[var(--text)]">{unit.name}</span>
           <div className="flex gap-1 text-[7px]">
-            <span className="text-[var(--stat-atk)]">⚔{unit.atkVal}</span>
-            <span className="text-[var(--stat-hp)]">❤{unit.curHp}</span>
+            <span className="inline-flex items-center gap-0.5 text-[var(--stat-atk)]"><Swords className="h-2.5 w-2.5" />{unit.atkVal}</span>
+            <span className="inline-flex items-center gap-0.5 text-[var(--stat-hp)]"><Heart className="h-2.5 w-2.5" />{unit.curHp}</span>
           </div>
         </>
       ) : (
@@ -65,3 +66,4 @@ function BenchSlot({ unit, isSelected, onClick }: { unit: BenchSlots[number]; is
     </button>
   )
 }
+
