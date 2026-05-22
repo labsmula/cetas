@@ -2,15 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Badge } from '@/src/components/ui/Badge'
 import { Button } from '@/src/components/ui/Button'
-import { Card, CardContent } from '@/src/components/ui/Card'
-import { LayoutGrid, Swords, Trophy } from 'lucide-react'
-
-// const PREVIEW_UNITS = [
-//   { src: '/assets/ui/avatars/avatar-01.png', name: 'Warrior' },
-//   { src: '/assets/ui/avatars/avatar-02.png', name: 'Archer' },
-//   { src: '/assets/ui/avatars/avatar-03.png', name: 'Lancer' },
-//   { src: '/assets/ui/avatars/avatar-04.png', name: 'Pawn' },
-// ]
+import { Swords, Shield, Trophy } from 'lucide-react'
 
 const FX_PARTICLES = [
   { src: '/assets/ui/icons/icon-01.png', cls: 'particle p1' },
@@ -26,31 +18,62 @@ const FX_PARTICLES = [
   { src: '/assets/ui/icons/icon-12.png', cls: 'particle p11' },
 ]
 
+const FEATURES = [
+  { icon: <Swords className="h-4 w-4" />, label: 'Auto Battle' },
+  { icon: <Shield className="h-4 w-4" />, label: 'Taktik Grid' },
+  { icon: <Trophy className="h-4 w-4" />, label: '5 Ronde' },
+]
+
 export default function Home() {
   return (
-    <div className="landing-bg game-scroll app-frame-outer mobile-shell relative overflow-hidden flex">
+    <div className="landing-bg game-scroll app-frame-outer mobile-shell relative overflow-hidden flex flex-col">
 
+      {/* Overlay */}
+      <div className="landing-overlay" aria-hidden />
+
+      {/* Particles */}
       {FX_PARTICLES.map((p, i) => (
         <Image key={i} src={p.src} alt="" width={18} height={18} className={p.cls} aria-hidden />
       ))}
 
-      {/* ── Hero ─────────────────────────────────────── */}
-      <section className="relative z-10 flex flex-col items-center gap-3 px-4 pt-9 pb-5">
-        <div className="text-center">
-          <p className="font-display text-xs uppercase tracking-[0.28em] text-[#f2ebdb]">Dark Fantasy Auto Battler</p>
-          <Image src="/logo.png" alt="CETAS" width={500} height={500} className="object-contain p-1" priority />
-        </div>
+      {/* ── Hero ── */}
+      <section className="relative z-10 flex flex-col items-center gap-2 px-4 pt-10 pb-4">
+        <p className="font-display text-[10px] uppercase tracking-[0.32em] text-[rgba(245,216,120,0.7)]">
+          Dark Fantasy Auto Battler
+        </p>
+        <Image
+          src="/logo.png"
+          alt="CETAS"
+          width={420} height={420}
+          className="object-contain drop-shadow-[0_0_40px_rgba(200,146,42,0.4)]"
+          priority
+        />
       </section>
 
-      {/* ── CTA ──────────────────────────────────────── */}
-      <section className="relative z-10 flex flex-col gap-3 px-4">
+      {/* ── Feature pills ── */}
+      <section className="relative z-10 flex justify-center gap-2 px-4 pb-4">
+        {FEATURES.map((f, i) => (
+          <Badge
+            key={i}
+            className="flex items-center gap-1 border-[rgba(200,146,42,0.3)] bg-[rgba(200,146,42,0.08)] text-[var(--gold-mid)]"
+          >
+            {f.icon}
+            {f.label}
+          </Badge>
+        ))}
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="relative z-10 flex flex-col gap-3 px-4 pb-6">
         <Link href="/game">
-            <Button variant="pixelGold" size="lg" className="w-full anim-glow">
-            <Swords className="h-4 w-4" /> MULAI BERMAIN
+          <Button variant="pixelGold" size="lg" className="w-full text-[15px] font-black tracking-widest anim-glow">
+            <Swords className="h-5 w-5" />
+            MULAI BERMAIN
           </Button>
         </Link>
-        <p className="text-center font-black text-sm text-primary z-10">
-          Celo Tactics — Mini App Edition
+
+        <p className="text-center font-display text-[10px] uppercase tracking-[0.2em] text-[rgba(245,216,120,0.5)]">
+          Celo Tactics · Mini App Edition
         </p>
       </section>
     </div>
