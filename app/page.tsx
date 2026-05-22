@@ -14,19 +14,19 @@ const PREVIEW_UNITS = [
 
 export default function Home() {
   return (
-    <div className="game-bg game-scroll">
+    <div className="game-bg game-scroll app-frame-outer">
       <div className="mobile-shell">
         {/* ── Hero ─────────────────────────────────────── */}
-        <section className="flex flex-col items-center gap-4 px-6 pt-14 pb-8">
+        <section className="flex flex-col items-center gap-3 px-4 pt-8 pb-5">
           <div className="relative h-24 w-24 overflow-hidden rounded-2xl border border-[var(--border-gold)] bg-[var(--bg-card)] p-1 anim-glow">
             <Image src="/logo.png" alt="CETAS" fill className="object-contain" priority />
           </div>
 
           <div className="text-center">
-            <h1 className="font-display text-[28px] font-bold tracking-wide text-[var(--gold)]">
+            <h1 className="font-display text-[22px] font-bold tracking-wide text-[var(--gold)]">
               CETAS
             </h1>
-            <p className="mt-1 text-[13px] leading-relaxed text-[var(--text-2)]">
+            <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--text-2)]">
               Auto-battler taktikal. Susun pasukan, tempur otomatis, kalahkan musuh!
             </p>
           </div>
