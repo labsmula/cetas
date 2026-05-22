@@ -25,7 +25,7 @@ export default function TopBar({ round, hp, gold, boardUnitCount, maxBoardSlots,
         ‹
       </Link>
 
-      <span className="text-[11px] font-black uppercase tracking-[0.22em] text-[var(--gold-hi)]">
+      <span className="font-display text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--gold-hi)]">
         CETAS
       </span>
 
