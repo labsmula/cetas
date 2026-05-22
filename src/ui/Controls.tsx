@@ -31,7 +31,7 @@ export default function Controls({
               <Coins className="h-4 w-4" />
             </Button>
           )}
-          <Button onClick={onBattle} variant="red" size="md" className="flex-1 text-[13px] font-black">
+          <Button onClick={onBattle} variant="gold" size="md" className="flex-1 text-[13px] font-black tracking-wide">
             <Swords className="h-4 w-4" /> BATTLE
           </Button>
         </div>
@@ -47,7 +47,7 @@ export default function Controls({
     : secondsLeft <= 5 ? 'var(--enemy)'
     : secondsLeft <= 10 ? 'var(--warn)'
     : 'var(--ok)'
-  const timeLabel = speedUp ? '⚡ 3×' : `${secondsLeft}s`
+  const timeLabel = speedUp ? '3×' : `${secondsLeft}s`
 
   return (
     <div className="surface flex items-center gap-2.5 px-3 py-2.5">

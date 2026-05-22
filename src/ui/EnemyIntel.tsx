@@ -30,7 +30,7 @@ export default function EnemyIntel({ enemies, round }: EnemyIntelProps) {
   const threat = getThreat(totalAtk)
 
   return (
-    <div className="surface-gold anim-fade-up px-3 py-2.5">
+    <div className="relic-frame anim-fade rounded-xl px-3 py-2.5">
       <div className="mb-2.5 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 text-[var(--warn)]" />

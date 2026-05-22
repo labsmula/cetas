@@ -19,7 +19,7 @@ interface ShopProps {
 
 export default function Shop({ shop, onBuy }: ShopProps) {
   return (
-    <div className="surface px-3 py-2.5">
+    <div className="relic-frame rounded-xl px-3 py-2.5">
       <div className="mb-2 flex items-center justify-between">
         <span className="label">Toko</span>
         <span className="text-[9px] text-[var(--text-3)]">Tap untuk beli</span>

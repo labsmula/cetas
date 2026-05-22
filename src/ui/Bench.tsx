@@ -15,7 +15,7 @@ export default function Bench({ bench, selected, onSlotClick }: BenchProps) {
   const filled = bench.filter(Boolean).length
 
   return (
-    <div className="surface px-3 py-2.5">
+    <div className="relic-frame rounded-xl px-3 py-2.5">
       <div className="mb-2 flex items-center justify-between">
         <span className="label">Bangku</span>
         <span className="text-[9px] text-[var(--text-3)]">{filled}/8</span>
