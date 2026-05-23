@@ -7,7 +7,7 @@ import { COLS, ROWS, getAllUnits } from './boardSystem'
 // ─── Enemy generation ─────────────────────────────────────────────────────────
 
 export function generateEnemyPreview(round: number, maxBoardSlots: number): EnemyPreview[] {
-  const maxEnemy = Math.min(maxBoardSlots + 1, 6)
+  const maxEnemy = Math.min(maxBoardSlots + 2, 9)
   const count = Math.min(2 + round, maxEnemy)
   const tier = Math.min(Math.floor(round / 2), 2)
   const pool = UNIT_DEFS.filter(u => u.cost <= 1 + tier)
@@ -27,9 +27,9 @@ export function generateEnemyPreview(round: number, maxBoardSlots: number): Enem
 
 export function generateEnemies(board: BoardGrid, round: number, maxBoardSlots: number): BoardGrid {
   const b: BoardGrid = board.map(row => [...row])
-  for (let r = 0; r < 2; r++) for (let c = 0; c < COLS; c++) b[r][c] = null
+  for (let r = 0; r < 3; r++) for (let c = 0; c < COLS; c++) b[r][c] = null
 
-  const maxEnemy = Math.min(maxBoardSlots + 1, 6)
+  const maxEnemy = Math.min(maxBoardSlots + 2, 9)
   const count = Math.min(2 + round, maxEnemy)
   const tier = Math.min(Math.floor(round / 2), 2)
   const pool = UNIT_DEFS.filter(u => u.cost <= 1 + tier)
@@ -39,7 +39,7 @@ export function generateEnemies(board: BoardGrid, round: number, maxBoardSlots: 
     const stars: 1 | 2 = round >= 4 && Math.random() < 0.35 ? 2 : 1
     let placed = false
     for (let attempt = 0; attempt < 20 && !placed; attempt++) {
-      const r = Math.floor(Math.random() * 2)
+      const r = Math.floor(Math.random() * 3)   // rows 0–2
       const c = Math.floor(Math.random() * COLS)
       if (!b[r][c]) { b[r][c] = makeUnit(def, stars, true); placed = true }
     }
@@ -131,8 +131,8 @@ export function runBattleStep(board: BoardGrid, deltaMs = 16, speedMult = 1): Ba
   for (const { u, r, c } of alive) pos.set(u.uid, { r, c })
 
   // Board cell pixel size (must match renderer constants)
-  const CW = 672 / COLS
-  const CH = 384 / ROWS
+  const CW = 800 / COLS
+  const CH = 540 / ROWS
 
   const newProjectiles: import('../core/types').Projectile[] = []
   let projId = Date.now()

@@ -64,7 +64,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { phase, selected, board, bench, maxBoardSlots } = get()
     if (phase !== 'prep') return
 
-    const isEnemyZone = row < 2
+    const isEnemyZone = row < 3
     if (isEnemyZone) {
       set({ selected: null })
       return
@@ -266,7 +266,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // surviving ones heal 25% of max HP.
     const newBoard = board.map((row, r) =>
       row.map((cell) => {
-        if (r < 2) return null          // clear enemy zone
+        if (r < 3) return null          // clear enemy zone (rows 0–2)
         if (!cell) return null
         if (cell.enemy) return null
 
