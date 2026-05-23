@@ -142,7 +142,7 @@ body {
 }
 .game-shell {
   width: 100%;
-  max-width: 860px;
+  max-width: 500px;
   margin: 0 auto;
   min-height: 100dvh;
   display: flex;

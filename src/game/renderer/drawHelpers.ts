@@ -1,6 +1,79 @@
 import type { Projectile, Unit } from '../core/types'
-import { ARROW_SPRITES, SPRITE_SHEETS, TERRAIN, getSpriteKey, type AnimState } from '../assets/spriteRegistry'
+import { ARROW_SPRITES, BUILDINGS, SPRITE_SHEETS, TERRAIN, getSpriteKey, type AnimState } from '../assets/spriteRegistry'
 import { loadImg } from './assetLoader'
+
+/**
+ * Draw a kingdom backdrop for one team.
+ * team='red'  → drawn at top (enemy), smaller scale (far perspective)
+ * team='blue' → drawn at bottom (ally), larger scale (near perspective)
+ * zoneTop = y pixel where this team's zone starts
+ */
+function drawKingdom(
+  ctx: CanvasRenderingContext2D,
+  team: 'red' | 'blue',
+  boardW: number,
+  cw: number,
+  ch: number,
+  zoneTop: number,
+) {
+  const b = BUILDINGS[team]
+
+  // Perspective scale: enemy (far) = 0.55×, ally (near) = 0.85×
+  const scale    = team === 'red' ? 0.55 : 0.85
+  const castleW  = Math.round(cw * 2.2 * scale)
+  const castleH  = Math.round(ch * 2.8 * scale)
+  const towerW   = Math.round(cw * 1.1 * scale)
+  const towerH   = Math.round(ch * 2.2 * scale)
+  const houseW   = Math.round(cw * 0.9 * scale)
+  const houseH   = Math.round(ch * 1.6 * scale)
+
+  // Y anchor: buildings sit at the zone boundary
+  // Red (top): buildings hang down from top edge, partially clipped
+  // Blue (bottom): buildings rise up from bottom, partially clipped
+  const castleY = team === 'red'
+    ? zoneTop - castleH * 0.15
+    : zoneTop + ch * 4 - castleH * 0.85
+
+  const towerY = team === 'red'
+    ? zoneTop - towerH * 0.1
+    : zoneTop + ch * 4 - towerH * 0.8
+
+  const houseY = team === 'red'
+    ? zoneTop - houseH * 0.05
+    : zoneTop + ch * 4 - houseH * 0.75
+
+  ctx.save()
+  ctx.globalAlpha = team === 'red' ? 0.72 : 0.78
+
+  // Helper to draw one building image
+  const draw = (url: string, x: number, y: number, w: number, h: number) => {
+    const img = loadImg(url)
+    if (img.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, x, y, w, h)
+    }
+  }
+
+  // Layout (left → right):
+  // [house] [tower] [barracks] [CASTLE] [barracks] [tower] [house]
+  const cx = boardW / 2
+
+  // Castle — center
+  draw(b.castle,   cx - castleW / 2,                    castleY,  castleW, castleH)
+
+  // Towers — flanking castle
+  draw(b.tower,    cx - castleW / 2 - towerW - cw * 0.1 * scale, towerY,  towerW, towerH)
+  draw(b.tower,    cx + castleW / 2 + cw * 0.1 * scale,           towerY,  towerW, towerH)
+
+  // Barracks — outside towers
+  draw(b.barracks, cx - castleW / 2 - towerW * 2 - cw * 0.25 * scale, houseY, houseW, houseH)
+  draw(b.barracks, cx + castleW / 2 + towerW + cw * 0.15 * scale,      houseY, houseW, houseH)
+
+  // Houses — far edges
+  draw(b.house1,   cw * 0.1 * scale,                    houseY,  houseW, houseH)
+  draw(b.house2,   boardW - houseW - cw * 0.1 * scale,  houseY,  houseW, houseH)
+
+  ctx.restore()
+}
 
 export function drawArena(
   ctx: CanvasRenderingContext2D,
@@ -8,11 +81,11 @@ export function drawArena(
 ) {
   const { cols, rows, cw, ch, boardW } = opts
   const boardH = rows * ch
-  const divY   = ch * 3   // divider between row 2 (enemy) and row 3 (ally)
+  const divY   = ch * 4   // divider between row 3 (enemy) and row 4 (ally)
 
   // ── Zone backgrounds ──────────────────────────────────────────────────────
 
-  // Enemy zone (rows 0–2): dark crimson earth
+  // Enemy zone (rows 0–3): dark crimson earth
   const enemyGrad = ctx.createLinearGradient(0, 0, 0, divY)
   enemyGrad.addColorStop(0,   '#180808')
   enemyGrad.addColorStop(0.5, '#2a1010')
@@ -20,7 +93,7 @@ export function drawArena(
   ctx.fillStyle = enemyGrad
   ctx.fillRect(0, 0, boardW, divY)
 
-  // Ally zone (rows 3–5): deep forest green
+  // Ally zone (rows 4–7): deep forest green
   const allyGrad = ctx.createLinearGradient(0, divY, 0, boardH)
   allyGrad.addColorStop(0,   '#081808')
   allyGrad.addColorStop(0.5, '#0c2810')
@@ -58,6 +131,14 @@ export function drawArena(
   allyAmbient.addColorStop(1,   'rgba(0, 0, 0, 0)')
   ctx.fillStyle = allyAmbient
   ctx.fillRect(0, divY, boardW, boardH - divY)
+
+  // ── Kingdom buildings — drawn as background scenery ──────────────────────
+  // Red kingdom: top edge (enemy side) — castle center, towers flanking
+  // Blue kingdom: bottom edge (ally side) — castle center, towers flanking
+  // Perspective: enemy buildings are smaller (far away), ally buildings larger (close)
+
+  drawKingdom(ctx, 'red',  boardW, cw, ch, 0)       // enemy top
+  drawKingdom(ctx, 'blue', boardW, cw, ch, divY)     // ally bottom (starts at divider)
 
   // ── Terrain props ─────────────────────────────────────────────────────────
   const rock1 = loadImg(TERRAIN.rock1)

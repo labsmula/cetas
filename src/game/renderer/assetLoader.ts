@@ -1,4 +1,4 @@
-import { ARROW_SPRITES, FX, SPRITE_SHEETS, TERRAIN } from '../assets/spriteRegistry'
+import { ARROW_SPRITES, BUILDINGS, FX, SPRITE_SHEETS, TERRAIN } from '../assets/spriteRegistry'
 
 const imageCache = new Map<string, HTMLImageElement>()
 
@@ -20,4 +20,7 @@ export function preloadAllGameImages() {
   Object.values(TERRAIN).forEach(loadImg)
   Object.values(FX).forEach(f => loadImg(f.url))
   Object.values(ARROW_SPRITES).forEach(loadImg)
+  // Preload buildings
+  Object.values(BUILDINGS.blue).forEach(loadImg)
+  Object.values(BUILDINGS.red).forEach(loadImg)
 }

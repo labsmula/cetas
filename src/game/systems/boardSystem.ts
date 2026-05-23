@@ -2,11 +2,11 @@
 import type { BoardGrid, BenchSlots, Unit, SelectedSource } from '../core/types'
 
 export const COLS = 8
-export const ROWS = 6
-export const ENEMY_ROWS = 3   // rows 0–2
-export const ALLY_ROW_START = 3  // rows 3–5
+export const ROWS = 8
+export const ENEMY_ROWS = 4   // rows 0–3
+export const ALLY_ROW_START = 4  // rows 4–7
 
-/** Count player-owned units on the board (rows 3–5) */
+/** Count player-owned units on the board (rows 4–7) */
 export function getBoardUnitCount(board: BoardGrid): number {
   let n = 0
   for (let r = ALLY_ROW_START; r < ROWS; r++)

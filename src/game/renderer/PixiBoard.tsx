@@ -7,12 +7,12 @@ import { SPRITE_SHEETS, getSpriteKey, type AnimState } from '../assets/spriteReg
 import { loadImg, preloadAllGameImages } from './assetLoader'
 import { drawArena, drawFloats, drawHpBar, drawProjectiles, drawStars, drawUnit } from './drawHelpers'
 
-export const BOARD_W = 800
-export const BOARD_H = 540
-export const CW = BOARD_W / COLS   // 100
-export const CH = BOARD_H / ROWS   // 90
-const SPRITE_W = 88
-const SPRITE_H = 96
+export const BOARD_W = 480
+export const BOARD_H = 640
+export const CW = BOARD_W / COLS   // 60
+export const CH = BOARD_H / ROWS   // 80
+const SPRITE_W = 54
+const SPRITE_H = 68
 const TILE_SIZE = 64
 
 // ─── Image loading moved to assetLoader.ts ───────────────────────────────────
@@ -116,13 +116,12 @@ export default function PixiBoard({
       const curProjs    = projectilesRef.current
       const animDelta   = curSpeedUp ? deltaMs * 3 : deltaMs
 
-      // Smooth movement: move visual position toward logical at fixed px/s speed
-      // 100px per cell, ~0.8s per cell = ~125 px/s
-      const MOVE_PX_PER_SEC = 125
+      // 60px per cell, ~0.8s per cell = ~75 px/s
+      const MOVE_PX_PER_SEC = 75
       const maxStep = MOVE_PX_PER_SEC * (deltaMs / 1000)
 
       let boardUnitCount = 0
-      for (let r = 3; r < ROWS; r++)
+      for (let r = 4; r < ROWS; r++)
         for (let c = 0; c < COLS; c++)
           if (curBoard[r][c] && !curBoard[r][c]!.enemy) boardUnitCount++
 
@@ -143,7 +142,7 @@ export default function PixiBoard({
       // Draw cell highlights
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          const isEnemyZone = r < 3
+          const isEnemyZone = r < 4
           const isSelected = curSelected?.src === 'board' &&
             (curSelected as { src: 'board'; r: number; c: number }).r === r &&
             (curSelected as { src: 'board'; r: number; c: number }).c === c

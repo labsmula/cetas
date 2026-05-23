@@ -64,7 +64,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { phase, selected, board, bench, maxBoardSlots } = get()
     if (phase !== 'prep') return
 
-    const isEnemyZone = row < 3
+    const isEnemyZone = row < 4
     if (isEnemyZone) {
       set({ selected: null })
       return
@@ -232,8 +232,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   endBattle() {
     const { board, round, maxBoardSlots, hp, gold } = get()
     const result = evaluateBattleEnd(board, round)
-    // Slot +1 always (win or lose) — capped at 7
-    const newSlots = Math.min(maxBoardSlots + 1, 7)
+    // Slot +1 always (win or lose) — capped at 12
+    const newSlots = Math.min(maxBoardSlots + 1, 12)
 
     if (result.win) {
       const newGold = Math.min(gold + result.goldEarned, 20)
@@ -266,7 +266,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // surviving ones heal 25% of max HP.
     const newBoard = board.map((row, r) =>
       row.map((cell) => {
-        if (r < 3) return null          // clear enemy zone (rows 0–2)
+        if (r < 4) return null          // clear enemy zone (rows 0–3)
         if (!cell) return null
         if (cell.enemy) return null
 

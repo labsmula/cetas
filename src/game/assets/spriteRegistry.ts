@@ -104,6 +104,29 @@ export function getSpriteKey(spriteType: string, isEnemy: boolean): string {
   return `${isEnemy ? 'red' : 'blue'}-${spriteType}`
 }
 
+// ─── Buildings ───────────────────────────────────────────────────────────────
+
+export const BUILDINGS = {
+  blue: {
+    castle:    '/assets/buildings/Blue Buildings/Castle.png',
+    tower:     '/assets/buildings/Blue Buildings/Tower.png',
+    barracks:  '/assets/buildings/Blue Buildings/Barracks.png',
+    archery:   '/assets/buildings/Blue Buildings/Archery.png',
+    house1:    '/assets/buildings/Blue Buildings/House1.png',
+    house2:    '/assets/buildings/Blue Buildings/House2.png',
+    monastery: '/assets/buildings/Blue Buildings/Monastery.png',
+  },
+  red: {
+    castle:    '/assets/buildings/Red Buildings/Castle.png',
+    tower:     '/assets/buildings/Red Buildings/Tower.png',
+    barracks:  '/assets/buildings/Red Buildings/Barracks.png',
+    archery:   '/assets/buildings/Red Buildings/Archery.png',
+    house1:    '/assets/buildings/Red Buildings/House1.png',
+    house2:    '/assets/buildings/Red Buildings/House2.png',
+    monastery: '/assets/buildings/Red Buildings/Monastery.png',
+  },
+}
+
 // ─── Terrain ─────────────────────────────────────────────────────────────────
 
 export const TERRAIN = {
