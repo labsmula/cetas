@@ -142,12 +142,20 @@ export default function PixiBoard({
       // Draw cell highlights
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          const isEnemyZone = r < 4
+          const isEnemyZone   = r < 4
+          const isBuildingRow = r === 0 || r === ROWS - 1
           const isSelected = curSelected?.src === 'board' &&
             (curSelected as { src: 'board'; r: number; c: number }).r === r &&
             (curSelected as { src: 'board'; r: number; c: number }).c === c
-          const isDropTarget = curPhase === 'prep' && !isEnemyZone && !isSelected &&
+          const isDropTarget = curPhase === 'prep' && !isEnemyZone && !isBuildingRow && !isSelected &&
             curSelected !== null && boardUnitCount < curMaxSlots && !curBoard[r][c]
+
+          // Building row overlay — darker, no interaction
+          if (isBuildingRow) {
+            ctx.fillStyle = 'rgba(0,0,0,0.35)'
+            ctx.fillRect(c * CW, r * CH, CW, CH)
+          }
+
           if (isSelected) {
             ctx.fillStyle = 'rgba(100,200,255,0.30)'; ctx.fillRect(c*CW, r*CH, CW, CH)
             ctx.strokeStyle = 'rgba(100,200,255,0.8)'; ctx.lineWidth = 2; ctx.strokeRect(c*CW+1, r*CH+1, CW-2, CH-2)
@@ -216,6 +224,7 @@ export default function PixiBoard({
     const mx = (e.clientX - rect.left) * scaleX, my = (e.clientY - rect.top) * scaleY
     const col = Math.floor(mx / CW), row = Math.floor(my / CH)
     if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return
+    if (row === 0 || row === ROWS - 1) return  // building rows — not clickable
     onCellClick(row, col)
   }
 

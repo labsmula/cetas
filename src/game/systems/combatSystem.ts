@@ -39,7 +39,7 @@ export function generateEnemies(board: BoardGrid, round: number, maxBoardSlots: 
     const stars: 1 | 2 = round >= 4 && Math.random() < 0.35 ? 2 : 1
     let placed = false
     for (let attempt = 0; attempt < 20 && !placed; attempt++) {
-      const r = Math.floor(Math.random() * 4)   // rows 0–3
+      const r = 1 + Math.floor(Math.random() * 3)   // rows 1–3 (row 0 = building)
       const c = Math.floor(Math.random() * COLS)
       if (!b[r][c]) { b[r][c] = makeUnit(def, stars, true); placed = true }
     }
@@ -70,7 +70,8 @@ function stepToward(
   if (dc !== 0) candidates.push([fromR, fromC + dc])
 
   for (const [nr, nc] of candidates) {
-    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === null)
+    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === null
+        && nr !== 0 && nr !== ROWS - 1)  // skip building rows
       return [nr, nc]
   }
 
@@ -83,6 +84,7 @@ function stepToward(
       const nr = fromR + dr2, nc = fromC + dc2
       if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue
       if (board[nr][nc] !== null) continue
+      if (nr === 0 || nr === ROWS - 1) continue  // skip building rows
       // Skip cells that move away in both axes (pure retreat)
       if (dr !== 0 && dc !== 0 && Math.sign(dr2) === -Math.sign(dr) && Math.sign(dc2) === -Math.sign(dc)) continue
       const dist = Math.max(Math.abs(nr - toR), Math.abs(nc - toC))

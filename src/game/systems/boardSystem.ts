@@ -6,6 +6,14 @@ export const ROWS = 8
 export const ENEMY_ROWS = 4   // rows 0–3
 export const ALLY_ROW_START = 4  // rows 4–7
 
+/** Rows reserved for buildings — no units can be placed or spawned here */
+export const BUILDING_ROWS = new Set([0, 7])
+
+/** Is this cell blocked by a building? */
+export function isBuildingCell(row: number): boolean {
+  return BUILDING_ROWS.has(row)
+}
+
 /** Count player-owned units on the board (rows 4–7) */
 export function getBoardUnitCount(board: BoardGrid): number {
   let n = 0
@@ -59,6 +67,16 @@ export function placeOnBoard(
   }
 
   if (!unit) return { board, bench, selected: null }
+
+  // Block placement on building rows (row 0 = enemy castle, row 7 = ally castle)
+  if (isBuildingCell(targetRow)) {
+    if (selected.src === 'bench') bch[selected.idx] = unit
+    else b[selected.r][selected.c] = unit
+    return {
+      board: b, bench: bch, selected: null,
+      error: '🏰 Cannot place units on building tiles!',
+    }
+  }
 
   const existing = b[targetRow][targetCol]
 

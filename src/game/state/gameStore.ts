@@ -64,8 +64,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { phase, selected, board, bench, maxBoardSlots } = get()
     if (phase !== 'prep') return
 
-    const isEnemyZone = row < 4
-    if (isEnemyZone) {
+    const isEnemyZone   = row < 4
+    const isBuildingRow = row === 0 || row === 7
+    if (isEnemyZone || isBuildingRow) {
       set({ selected: null })
       return
     }
