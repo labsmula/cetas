@@ -10,13 +10,13 @@ import AppHeader from '@/src/ui/hub/AppHeader'
  */
 export default function HubLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="home-bg game-scroll app-frame-outer mobile-shell relative flex flex-col overflow-hidden">
+    <div className="home-bg game-scroll app-frame-outer mobile-shell flex flex-col overflow-hidden">
       {/* Curtain fade-in on every hub page */}
       <div className="curtain" aria-hidden />
 
       <AppHeader />
 
-      <main className="relative z-10 flex flex-col gap-3 px-4 pb-24 pt-2">
+      <main className="flex flex-col gap-3 px-4 pb-24 pt-2">
         {children}
       </main>
 

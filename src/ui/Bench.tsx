@@ -71,7 +71,7 @@ function BenchSlot({
   return (
     <button
       onClick={onClick}
-      title={unit ? `${unit.name} ⭐${unit.stars} | ATK:${unit.atkVal} HP:${unit.curHp}` : 'Empty'}
+      title={unit ? `${unit.name} ${unit.stars}* | ATK:${unit.atkVal} HP:${unit.curHp}` : 'Empty'}
       className={cn(
         'flex flex-shrink-0 h-[72px] w-[62px] flex-col items-center justify-center gap-0.5 rounded-xl transition-all duration-150',
         !unit && [

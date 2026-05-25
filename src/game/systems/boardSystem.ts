@@ -74,7 +74,7 @@ export function placeOnBoard(
     else b[selected.r][selected.c] = unit
     return {
       board: b, bench: bch, selected: null,
-      error: '🏰 Cannot place units on building tiles!',
+      error: 'Cannot place units on building tiles!',
     }
   }
 
@@ -91,7 +91,7 @@ export function placeOnBoard(
       bch[selected.idx] = unit
       return {
         board: b, bench: bch, selected: null,
-        error: `⚠️ Board full! Maximum ${maxBoardSlots} units allowed.`,
+        error: `Board full! Maximum ${maxBoardSlots} units allowed.`,
       }
     }
   }
@@ -99,7 +99,7 @@ export function placeOnBoard(
   b[targetRow][targetCol] = unit
   return {
     board: b, bench: bch, selected: null,
-    log: `📍 ${unit.name} placed`,
+    log: `${unit.name} placed`,
   }
 }
 

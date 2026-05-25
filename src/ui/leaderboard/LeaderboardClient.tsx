@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Crown, Trophy, Swords, Shield, Flame, Medal } from 'lucide-react'
+import { Trophy, Swords, Shield, Flame, Medal, Crown, Star } from 'lucide-react'
 import { Button } from '@/src/components/ui/Button'
 import { useHomeStore } from '@/src/lib/homeStore'
 import BottomNav from '@/src/ui/home/BottomNav'
@@ -98,8 +98,11 @@ export default function LeaderboardClient() {
               )}
             >
               {/* Rank number */}
-              <span className={cn('w-6 flex-shrink-0 text-center font-display text-[14px] font-bold', rankStyle)}>
-                {i < 3 ? ['🥇','🥈','🥉'][i] : `${i + 1}`}
+              <span className={cn('w-7 flex-shrink-0 text-center font-display text-[14px] font-bold', rankStyle)}>
+                {i === 0 && <Trophy className="h-4 w-4 inline text-[var(--gold-hi)]" />}
+                {i === 1 && <Medal  className="h-4 w-4 inline text-[#c0c8d8]" />}
+                {i === 2 && <Star   className="h-4 w-4 inline text-[#c8906a]" />}
+                {i >= 3  && `${i + 1}`}
               </span>
 
               {/* Avatar */}

@@ -50,7 +50,7 @@ export function checkMerge(bench: BenchSlots): MergeResult {
         const free = b.indexOf(null)
         if (free >= 0) b[free] = newUnit
         else b[idxs[0]] = newUnit
-        mergeLog.push(`✨ Merged! ${unit.name} ⭐${newStars} appeared!`)
+        mergeLog.push(`Merged! ${unit.name} [${newStars}★] appeared!`)
         changed = true
         break
       }
@@ -74,10 +74,10 @@ export function buyUnit(
   gold: number,
 ): BuyResult {
   if (shopItem.sold) return { bench, gold, shopItem, log: '', error: 'Already sold' }
-  if (gold < shopItem.cost) return { bench, gold, shopItem, log: '', error: '🪙 Not enough gold!' }
+  if (gold < shopItem.cost) return { bench, gold, shopItem, log: '', error: 'Not enough gold!' }
 
   const free = bench.indexOf(null)
-  if (free < 0) return { bench, gold, shopItem, log: '', error: '⚠️ Bench is full! Sell a unit first.' }
+  if (free < 0) return { bench, gold, shopItem, log: '', error: 'Bench is full! Sell a unit first.' }
 
   const def = UNIT_DEFS.find(d => d.id === shopItem.id)!
   const newBench = [...bench]
@@ -87,6 +87,6 @@ export function buyUnit(
     bench: newBench,
     gold: gold - shopItem.cost,
     shopItem: { ...shopItem, sold: true },
-    log: `🛒 Recruited ${shopItem.name} −🪙${shopItem.cost}`,
+    log: `Recruited ${shopItem.name} -${shopItem.cost}g`,
   }
 }

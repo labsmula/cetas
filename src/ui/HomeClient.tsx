@@ -14,32 +14,11 @@ export default function HomeClient() {
 
       {/* ── Quick action cards ── */}
       <section className="grid grid-cols-2 gap-3">
-        <ActionCard
-          href="/game"
-          iconBg="bg-[rgba(224,48,48,0.12)]"
-          iconBorder="border-[rgba(224,48,48,0.25)]"
-          icon={<Swords className="h-6 w-6 text-[var(--enemy)]" />}
-          title="Battle"
-          sub="Enter the arena"
-        />
-        <ActionCard
-          href="/leaderboard"
-          iconBg="bg-[rgba(200,146,42,0.1)]"
-          iconBorder="border-[rgba(200,146,42,0.25)]"
-          icon={<Trophy className="h-6 w-6 text-[var(--gold-mid)]" />}
-          title="Ranks"
-          sub="Top players"
-        />
+        
       </section>
 
       <DailyChest />
       <QuestPreview />
-
-      {/* ── Locked features ── */}
-      <section className="grid grid-cols-2 gap-3">
-        <LockedCard icon={<Star   className="h-4 w-4 text-[var(--purple)]" />} label="Collection" />
-        <LockedCard icon={<Shield className="h-4 w-4 text-[var(--ally)]"   />} label="Guild"      />
-      </section>
 
       <BottomNav />
     </>

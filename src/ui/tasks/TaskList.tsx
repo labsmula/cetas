@@ -56,7 +56,7 @@ export default function TaskList() {
           <div className="flex flex-shrink-0 items-center gap-1.5 rounded-lg
                           border border-[rgba(200,146,42,0.4)] bg-[rgba(200,146,42,0.1)]
                           px-2.5 py-1.5">
-            <span className="text-base leading-none">🏆</span>
+            <Trophy className="h-4 w-4 text-[var(--gold-hi)]" />
             <span className="font-display text-[9px] font-bold uppercase tracking-wider text-[var(--gold-hi)]">
               All done!
             </span>

@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/src/components/ui/Button'
-import { Coins, Swords, Timer, Dices } from 'lucide-react'
+import { Coins, Swords, Timer, Dices, Zap } from 'lucide-react'
 
 interface ControlsProps {
   phase: 'prep' | 'battle'
@@ -34,7 +34,7 @@ export default function Controls({
           >
             <Dices className="h-4 w-4" />
             Reroll
-            <span className="ml-0.5 text-[10px] opacity-60">−2🪙</span>
+            <span className="ml-0.5 text-[10px] opacity-60">−2g</span>
           </Button>
 
           {/* Sell — only when unit selected */}
@@ -118,7 +118,7 @@ export default function Controls({
 
       {/* Status label */}
       <span className="flex-shrink-0 text-[10px] font-semibold text-[var(--text-3)]">
-        {speedUp ? '⚡ Speed up!' : 'In progress…'}
+        {speedUp ? <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-[var(--enemy)]" />Speed up!</span> : 'In progress…'}
       </span>
     </div>
   )

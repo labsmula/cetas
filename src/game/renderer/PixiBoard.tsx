@@ -206,7 +206,7 @@ export default function PixiBoard({
 
       if (curSpeedUp) {
         ctx.save(); ctx.font = 'bold 11px sans-serif'
-        ctx.fillStyle = 'rgba(255,160,40,0.9)'; ctx.fillText('⚡ 3× SPEED', BOARD_W - 80, 14); ctx.restore()
+        ctx.fillStyle = 'rgba(255,160,40,0.9)'; ctx.fillText('3x SPEED', BOARD_W - 80, 14); ctx.restore()
       }
 
       rafRef.current = requestAnimationFrame(loop)
