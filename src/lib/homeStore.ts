@@ -45,6 +45,17 @@ export const CHEST_REWARDS: ChestReward[] = [
   { label: 'Epic Shard', amount: 1   },
 ]
 
+// ── Referral / Friends ───────────────────────────────────────────────────────
+export interface Friend {
+  id:        string
+  name:      string
+  avatarIdx: number
+  joinedAt:  string   // ISO date string
+  rewarded:  boolean  // reward already claimed for this referral
+}
+
+const REFERRAL_REWARD = 100  // pts per successful referral claim
+
 function todayKey() {
   return new Date().toISOString().slice(0, 10)
 }
@@ -66,6 +77,10 @@ interface HomeState {
   today:       string
   taskStates:  DailyTaskState[]
   chestOpened: boolean
+  // Friends & Referral
+  friends:          Friend[]
+  referralCode:     string
+  usedReferralCode: string | null   // code entered by this user (null = not yet used)
   // Actions
   setPlayerName:  (name: string) => void
   setAvatarIdx:   (idx: number)  => void
@@ -73,6 +88,8 @@ interface HomeState {
   claimTask:      (id: string)   => void
   openChest:      () => ChestReward | null
   completeOnboarding: (name: string, avatarIdx: number) => void
+  claimReferralReward: (friendId: string) => void
+  submitReferralCode:  (code: string) => boolean  // returns true if accepted
 }
 
 export const useHomeStore = create<HomeState>()(
@@ -87,6 +104,9 @@ export const useHomeStore = create<HomeState>()(
       today:       todayKey(),
       taskStates:  defaultTaskStates(),
       chestOpened: false,
+      friends:          [],
+      referralCode:     Math.random().toString(36).slice(2, 8).toUpperCase(),
+      usedReferralCode: null,
 
       setPlayerName: (name) => set({ playerName: name }),
       setAvatarIdx:  (idx)  => set({ avatarIdx: idx }),
@@ -118,6 +138,33 @@ export const useHomeStore = create<HomeState>()(
         const reward = CHEST_REWARDS[Math.floor(Math.random() * CHEST_REWARDS.length)]
         set(s => ({ chestOpened: true, totalPoints: s.totalPoints + reward.amount }))
         return reward
+      },
+
+      claimReferralReward(friendId) {
+        set(s => {
+          const friends = s.friends.map(f =>
+            f.id === friendId && !f.rewarded ? { ...f, rewarded: true } : f
+          )
+          const didClaim = friends.find(f => f.id === friendId)?.rewarded &&
+                           !s.friends.find(f => f.id === friendId)?.rewarded
+          return {
+            friends,
+            totalPoints: didClaim ? s.totalPoints + REFERRAL_REWARD : s.totalPoints,
+          }
+        })
+      },
+
+      submitReferralCode(code) {
+        const { usedReferralCode, referralCode } = get()
+        const normalized = code.trim().toUpperCase()
+        // Reject: already used, empty, or own code
+        if (usedReferralCode || !normalized || normalized === referralCode) return false
+        // Accept — give bonus points to this user
+        set(s => ({
+          usedReferralCode: normalized,
+          totalPoints: s.totalPoints + REFERRAL_REWARD,
+        }))
+        return true
       },
     }),
     {

@@ -1,56 +1,60 @@
 'use client'
 
 import Link from 'next/link'
-import { CheckSquare } from 'lucide-react'
+import Image from 'next/image'
 import { useHomeStore, DAILY_TASK_DEFS } from '@/src/lib/homeStore'
 import { cn } from '@/src/lib/utils'
 
 export default function QuestPreview() {
   const { taskStates } = useHomeStore()
   const completedCount = taskStates.filter(t => t.done).length
+  const allDone = completedCount === DAILY_TASK_DEFS.length
 
   return (
     <Link
       href="/tasks"
-      className="relic-frame group flex items-center gap-3 px-4 py-3.5
-                 transition-colors hover:border-[var(--border-gold)] no-underline"
+      className="relic-frame group flex items-center gap-2.5 px-3 py-2.5 no-underline
+                 transition-all hover:border-[var(--gold-hi)]"
     >
-      {/* Icon */}
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center
-                      rounded-xl border border-[rgba(61,186,106,0.3)] bg-[rgba(61,186,106,0.08)]">
-        <CheckSquare className="h-5 w-5 text-[var(--ok)]" />
+      {/* Icon — task asset */}
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg
+                      border border-[rgba(61,186,106,0.35)] bg-[rgba(61,186,106,0.1)]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/ui/task.png"
+          alt="Daily quests"
+          width={24}
+          height={24}
+          className="pixel object-contain"
+        />
       </div>
 
-      {/* Info */}
       <div className="min-w-0 flex-1">
-        <p className="font-display text-[12px] font-bold uppercase tracking-wider text-[var(--text-1)]">
+        <p className="font-display text-[11px] font-bold uppercase tracking-wider text-[var(--text-1)]">
           Daily Quests
         </p>
-        <div className="mt-1 flex items-center gap-2">
-          {/* Progress dots */}
-          <div className="flex gap-1">
-            {DAILY_TASK_DEFS.map(def => {
-              const done = taskStates.find(t => t.id === def.id)?.done ?? false
-              return (
-                <span
-                  key={def.id}
-                  className={cn(
-                    'h-1.5 w-1.5 rounded-full transition-colors',
-                    done ? 'bg-[var(--ok)]' : 'bg-white/10'
-                  )}
-                />
-              )
-            })}
-          </div>
-          <span className="text-[10px] text-[var(--text-3)]">
-            {completedCount}/{DAILY_TASK_DEFS.length} completed
+        {/* Progress dots */}
+        <div className="mt-0.5 flex items-center gap-1">
+          {DAILY_TASK_DEFS.map(def => (
+            <span
+              key={def.id}
+              className={cn(
+                'h-1 w-1 rounded-full transition-colors',
+                taskStates.find(t => t.id === def.id)?.done ? 'bg-[var(--ok)]' : 'bg-[rgba(11,78,162,0.5)]'
+              )}
+            />
+          ))}
+          <span className="ml-1 text-[9px] text-[var(--text-3)]">
+            {completedCount}/{DAILY_TASK_DEFS.length}
           </span>
         </div>
       </div>
 
-      {/* Arrow */}
-      <span className="text-lg text-[var(--text-3)] transition-colors group-hover:text-[var(--gold-mid)]">
-        ›
+      <span className={cn(
+        'flex-shrink-0 text-[9px] font-bold uppercase tracking-wider',
+        allDone ? 'text-[var(--ok)]' : 'text-[var(--text-3)] group-hover:text-[var(--gold-mid)]'
+      )}>
+        {allDone ? 'Done!' : '›'}
       </span>
     </Link>
   )

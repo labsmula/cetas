@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Trophy, Swords, Shield, Flame, Medal, Crown, Star } from 'lucide-react'
+import { Trophy, Swords, Shield, Flame, Medal, Star } from 'lucide-react'
 import { Button } from '@/src/components/ui/Button'
 import { useHomeStore } from '@/src/lib/homeStore'
 import BottomNav from '@/src/ui/home/BottomNav'
@@ -44,12 +44,13 @@ export default function LeaderboardClient() {
   const myRank = allPlayers.findIndex(p => p.name === playerName) + 1
 
   return (
-    <>
+    <div className="flex h-full flex-col gap-3">
       {/* ── Page header ── */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center
+      <div className="flex flex-shrink-0 items-center gap-3">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center
                         rounded-xl border border-[rgba(200,146,42,0.3)] bg-[rgba(200,146,42,0.08)]">
-          <Crown className="h-5 w-5 text-[var(--gold-hi)]" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/ui/leaderboard.png" alt="" width={18} height={18} className="pixel object-contain" aria-hidden />
         </div>
         <div>
           <h1 className="font-display text-[15px] font-bold uppercase tracking-[0.15em] text-[var(--gold-hi)]">
@@ -63,8 +64,8 @@ export default function LeaderboardClient() {
         </div>
       </div>
 
-      {/* ── Stats row ── */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* ── Stats row — fixed ── */}
+      <div className="grid flex-shrink-0 grid-cols-3 gap-2">
         {[
           { icon: <Trophy className="h-4 w-4 text-[var(--gold-hi)]" />,  label: 'Top Wins',    value: '38' },
           { icon: <Swords className="h-4 w-4 text-[var(--enemy)]" />,   label: 'Best Streak', value: '9'  },
@@ -78,8 +79,8 @@ export default function LeaderboardClient() {
         ))}
       </div>
 
-      {/* ── Player list ── */}
-      <div className="relic-frame flex flex-col gap-0 overflow-hidden p-0">
+      {/* ── Scrollable player list ── */}
+      <div className="relic-frame game-scroll flex flex-1 flex-col gap-0 overflow-y-auto overflow-x-hidden p-0">
         {allPlayers.map((p, i) => {
           const isMe      = p.name === playerName
           const rankStyle = RANK_STYLES[i] ?? 'text-[var(--text-3)]'
@@ -92,29 +93,21 @@ export default function LeaderboardClient() {
               className={cn(
                 'flex items-center gap-3 px-4 py-3 transition-colors',
                 'border-b border-[var(--border)] last:border-b-0',
-                isMe
-                  ? 'bg-[rgba(200,146,42,0.07)]'
-                  : 'hover:bg-white/[0.02]'
+                isMe ? 'bg-[rgba(200,146,42,0.07)]' : 'hover:bg-white/[0.02]'
               )}
             >
-              {/* Rank number */}
               <span className={cn('w-7 flex-shrink-0 text-center font-display text-[14px] font-bold', rankStyle)}>
                 {i === 0 && <Trophy className="h-4 w-4 inline text-[var(--gold-hi)]" />}
                 {i === 1 && <Medal  className="h-4 w-4 inline text-[#c0c8d8]" />}
                 {i === 2 && <Star   className="h-4 w-4 inline text-[#c8906a]" />}
                 {i >= 3  && `${i + 1}`}
               </span>
-
-              {/* Avatar */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/assets/ui/avatars/avatar-${pad}.png`}
-                alt=""
-                aria-hidden
+                alt="" aria-hidden
                 className="pixel h-8 w-8 flex-shrink-0 rounded-lg border border-[var(--border)]"
               />
-
-              {/* Name + tier */}
               <div className="min-w-0 flex-1">
                 <p className={cn(
                   'truncate font-display text-[12px] font-bold uppercase tracking-wider',
@@ -136,8 +129,6 @@ export default function LeaderboardClient() {
                   )}
                 </div>
               </div>
-
-              {/* Score */}
               <div className="flex-shrink-0 text-right">
                 <p className="font-display text-[13px] font-bold tabular-nums text-[var(--gold-hi)]">
                   {p.score.toLocaleString()}
@@ -149,15 +140,7 @@ export default function LeaderboardClient() {
         })}
       </div>
 
-      {/* ── CTA ── */}
-      <Link href="/game">
-        <Button variant="pixelGold" size="lg" className="w-full font-black tracking-wider">
-          <Medal className="h-4 w-4" />
-          Challenge Arena
-        </Button>
-      </Link>
-
       <BottomNav />
-    </>
+    </div>
   )
 }

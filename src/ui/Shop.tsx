@@ -48,9 +48,9 @@ function ShopCard({ item, onBuy }: { item: ShopItem; onBuy: () => void }) {
       className={cn(
         'flex flex-shrink-0 w-[78px] flex-col items-center gap-1.5 rounded-xl px-1.5 py-2.5 transition-all duration-150',
         item.sold
-          ? 'cursor-default border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] opacity-30'
+          ? 'cursor-default border border-[rgba(255,255,255,0.05)] bg-[rgba(4,16,33,0.5)] opacity-30'
           : [
-              'cursor-pointer border border-[rgba(200,146,42,0.2)] bg-[rgba(200,146,42,0.04)]',
+              'cursor-pointer border border-[rgba(200,146,42,0.2)] bg-[rgba(8,28,58,0.6)]',
               'hover:border-[rgba(200,146,42,0.45)] hover:bg-[rgba(200,146,42,0.09)]',
               'active:scale-95 active:brightness-90',
             ]

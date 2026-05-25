@@ -46,7 +46,7 @@ export default function TopBar({ round, hp, gold, boardUnitCount, maxBoardSlots,
       </div>
 
       {/* ── HP ── */}
-      <div className="flex min-w-[60px] flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1.5">
+      <div className="flex min-w-[60px] flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2.5 py-1.5">
         <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1">
             <Shield className="h-3 w-3 flex-shrink-0" style={{ color: hpColor }} />
@@ -54,7 +54,7 @@ export default function TopBar({ round, hp, gold, boardUnitCount, maxBoardSlots,
           </div>
           <span className="font-display text-[13px] font-bold tabular-nums" style={{ color: hpColor }}>{hp}</span>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(11,78,162,0.25)]">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{ width: `${hpPct}%`, background: hpColor, boxShadow: `0 0 6px ${hpColor}` }}
@@ -63,13 +63,13 @@ export default function TopBar({ round, hp, gold, boardUnitCount, maxBoardSlots,
       </div>
 
       {/* ── Round ── */}
-      <div className="flex flex-col items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1.5">
+      <div className="flex flex-col items-center rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2.5 py-1.5">
         <span className="text-[8px] font-semibold uppercase tracking-wider text-[var(--text-3)]">Round</span>
         <span className="font-display text-[13px] font-bold text-[var(--text-1)]">{round}<span className="text-[10px] text-[var(--text-3)]">/5</span></span>
       </div>
 
       {/* ── Slots ── */}
-      <div className="flex flex-col items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1.5">
+      <div className="flex flex-col items-center rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2.5 py-1.5">
         <span className="text-[8px] font-semibold uppercase tracking-wider text-[var(--text-3)]">Slots</span>
         <span className="font-display text-[13px] font-bold text-[var(--ally)]">{boardUnitCount}<span className="text-[10px] text-[var(--text-3)]">/{maxBoardSlots}</span></span>
       </div>

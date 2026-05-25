@@ -1,21 +1,26 @@
 'use client'
 
 import Link from 'next/link'
-import { Swords, Trophy, Star, Shield, Lock } from 'lucide-react'
+import { Lock, Swords, Users } from 'lucide-react'
 import PlayerCard   from './home/PlayerCard'
 import DailyChest  from './home/DailyChest'
 import QuestPreview from './home/QuestPreview'
 import BottomNav   from './home/BottomNav'
+import Image from 'next/image'
+
+const LEAVES = [
+  { src: '/assets/fx/leaf/1.png', cls: 'leaf l1', w: 18 },
+  { src: '/assets/fx/leaf/3.png', cls: 'leaf l2', w: 16 },
+  { src: '/assets/fx/leaf/5.png', cls: 'leaf l3', w: 20 },
+  { src: '/assets/fx/leaf/2.png', cls: 'leaf l4', w: 16 },
+  { src: '/assets/fx/leaf/4.png', cls: 'leaf l5', w: 14 },
+  { src: '/assets/fx/leaf/6.png', cls: 'leaf l6', w: 18 },
+]
 
 export default function HomeClient() {
   return (
-    <>
+    <div className="flex h-full flex-col gap-3">
       <PlayerCard />
-
-      {/* ── Quick action cards ── */}
-      <section className="grid grid-cols-2 gap-3">
-        
-      </section>
 
       {/* ── Daily cards — 2 column ── */}
       <section className="grid grid-cols-2 gap-3">
@@ -23,58 +28,54 @@ export default function HomeClient() {
         <QuestPreview />
       </section>
 
+      {/* ── Play Arena — fills remaining space ── */}
+      <section className="relative flex flex-1 flex-col items-center overflow-hidden pt-2">
+        {/* Falling leaves */}
+        {LEAVES.map((l, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <div key={i} className={l.cls} aria-hidden>
+            <img src={l.src} alt="" style={{ width: l.w, height: 'auto' }} />
+          </div>
+        ))}
+
+        {/* Arena image — upper-center, constrained size */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <Image
+          src="/play_arena.png"
+          alt="Play Arena"
+          className="object-contain object-top drop-shadow-[0_8px_32px_rgba(200,146,42,0.25)]"
+          style={{ width: '100%', maxHeight: 300 }}
+        />
+
+        {/* Buttons — pinned to bottom */}
+        <div className="absolute bottom-16 grid w-full grid-cols-2 gap-2 px-1 pb-1">
+          <Link
+            href="/game"
+            className="flex items-center justify-center gap-1.5 rounded-xl border
+                       border-[var(--border-gold)] bg-[rgba(4,16,33,0.88)]
+                       px-3 py-2.5 no-underline backdrop-blur-sm transition-all
+                       hover:bg-[rgba(200,146,42,0.18)] hover:border-[var(--gold-hi)]
+                       shadow-[0_4px_20px_rgba(0,0,0,0.5)] active:scale-95"
+          >
+            <Swords className="h-3.5 w-3.5 text-[var(--gold-mid)]" />
+            <span className="font-display text-[11px] font-bold uppercase tracking-wider text-[var(--gold-hi)]">
+              Endless
+            </span>
+          </Link>
+          <div className="flex cursor-not-allowed items-center justify-center gap-1.5 rounded-xl
+                          border border-[var(--border)] bg-[rgba(4,16,33,0.88)]
+                          px-3 py-2.5 opacity-40 select-none backdrop-blur-sm
+                          shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+            <Users className="h-3.5 w-3.5 text-[var(--text-3)]" />
+            <span className="font-display text-[11px] font-bold uppercase tracking-wider text-[var(--text-3)]">
+              Multiplayer
+            </span>
+            <Lock className="h-2.5 w-2.5 text-[var(--text-dim)]" />
+          </div>
+        </div>
+      </section>
+
       <BottomNav />
-    </>
-  )
-}
-
-// ── Sub-components (small, local-only) ────────────────────────────────────────
-
-interface ActionCardProps {
-  href:        string
-  iconBg:      string
-  iconBorder:  string
-  icon:        React.ReactNode
-  title:       string
-  sub:         string
-}
-
-function ActionCard({ href, iconBg, iconBorder, icon, title, sub }: ActionCardProps) {
-  return (
-    <Link
-      href={href}
-      className="group relative flex flex-col gap-2 rounded-2xl border border-[var(--border)]
-                 bg-gradient-to-br from-[rgba(26,18,42,0.94)] to-[rgba(16,11,28,0.98)]
-                 px-4 py-4 no-underline shadow-[0_4px_20px_rgba(0,0,0,0.45)]
-                 transition-all hover:border-[var(--border-gold)]
-                 hover:shadow-[0_6px_24px_rgba(0,0,0,0.55),0_0_20px_rgba(200,146,42,0.07)]"
-    >
-      <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${iconBg} ${iconBorder}`}>
-        {icon}
-      </div>
-      <div>
-        <p className="font-display text-[13px] font-bold uppercase tracking-[0.08em] text-[var(--text-1)]">
-          {title}
-        </p>
-        <p className="text-[10px] text-[var(--text-3)]">{sub}</p>
-      </div>
-      <span className="absolute right-3.5 top-3.5 text-lg leading-none text-[var(--text-3)]
-                       transition-colors group-hover:text-[var(--gold-mid)]">
-        ›
-      </span>
-    </Link>
-  )
-}
-
-function LockedCard({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <div className="flex cursor-not-allowed items-center gap-2 rounded-xl
-                    border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 opacity-40">
-      {icon}
-      <span className="font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-3)]">
-        {label}
-      </span>
-      <Lock className="ml-auto h-3 w-3 text-[var(--text-dim)]" />
     </div>
   )
 }

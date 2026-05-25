@@ -12,8 +12,8 @@ export default function AppHeader() {
         style={{ height: 'auto' }}
         priority
       />
-      <div className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-white/[0.04] px-3 py-1">
-        <span className="font-display text-[9px] uppercase tracking-[0.2em] text-[var(--text-3)]">
+      <div className="flex items-center gap-1.5 rounded-full border border-[var(--border-gold)] bg-[rgba(200,146,42,0.08)] px-3 py-1">
+        <span className="font-display text-[9px] uppercase tracking-[0.2em] text-[var(--gold-mid)]">
           Celo Tactics
         </span>
         <span className="h-1 w-1 rounded-full bg-[var(--ok)]" />

@@ -74,8 +74,8 @@ export default function PlayerCard() {
 
         {/* Points badge */}
         <div className="flex min-w-[64px] flex-shrink-0 flex-col items-center gap-0.5
-                        rounded-xl border border-[rgba(200,146,42,0.3)]
-                        bg-[rgba(200,146,42,0.07)] px-3 py-2.5">
+                        rounded-xl border border-[var(--border-gold)]
+                        bg-[rgba(200,146,42,0.08)] px-3 py-2.5">
           <span className="text-[8px] font-semibold uppercase tracking-wider text-[var(--text-3)]">
             Points
           </span>
