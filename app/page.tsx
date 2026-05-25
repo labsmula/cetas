@@ -30,8 +30,8 @@ export default function RootPage() {
         {/* ── Center block: subtitle + logo + button ── */}
         <section className="relative z-10 flex flex-1 flex-col items-center justify-center gap-6 px-6">
           <div className="flex flex-col items-center gap-2">
-            <p className="intro-subtitle font-display text-[10px] uppercase tracking-[0.32em] text-[rgba(245,216,120,0.7)]">
-              Dark Fantasy Auto Battler
+            <p className="intro-subtitle font-display text-[10px] uppercase tracking-[0.32em] text-[rgba(125,212,248,0.7)]">
+              Tactical Auto Battler · Celo L2
             </p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
