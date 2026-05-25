@@ -61,6 +61,12 @@ export default function Home() {
           </Button>
         </Link>
 
+        <Link href="/leaderboard">
+          <Button variant="pixelGhost" size="md" className="w-full font-display text-[11px] uppercase tracking-[0.2em]">
+            Leaderboard
+          </Button>
+        </Link>
+
         <p className="text-center font-display text-[10px] uppercase tracking-[0.2em] text-[rgba(245,216,120,0.5)]">
         Celo Tactics · Mini App Edition
         </p>
