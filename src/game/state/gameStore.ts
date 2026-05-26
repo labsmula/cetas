@@ -5,6 +5,7 @@ import type { GameState, SelectedSource } from '../core/types'
 import { emptyBoard, getBoardUnitCount, placeOnBoard, placeOnBench } from '../systems/boardSystem'
 import { generateShop, checkMerge, buyUnit as buyUnitFn } from '../systems/shopSystem'
 import { generateEnemies, runBattleStep, evaluateBattleEnd, generateEnemyPreview } from '../systems/combatSystem'
+import { getDefById, makeUnit } from '../core/unitFactory'
 import {
   BATTLE_LIMIT_MS,
   INITIAL_STAGE,
@@ -15,6 +16,7 @@ import {
   REROLL_COST,
 } from '../constants'
 import type { BoardGrid, BenchSlots, Unit } from '../core/types'
+import type { PlayerGameProgressDTO, SavedGameUnitDTO } from '@/src/lib/api-types'
 
 const MAX_LOG = 5
 
@@ -25,6 +27,7 @@ function addLog(logs: string[], msg: string): string[] {
 
 interface GameActions {
   setSavedStage: (stage: number) => void
+  setSavedProgress: (progress: PlayerGameProgressDTO | null) => void
   // Prep phase
   selectUnit: (sel: SelectedSource) => void
   clickBoardCell: (row: number, col: number) => void
@@ -105,12 +108,68 @@ function recallBench(bench: BenchSlots): BenchSlots {
   return bench.map(unit => unit ? recallUnit(unit) : null)
 }
 
-function persistEndlessStage(stage: number): void {
+function serializeUnit(unit: Unit | null): SavedGameUnitDTO | null {
+  if (!unit || unit.enemy) return null
+  return {
+    id: unit.id,
+    stars: unit.stars as 1 | 2 | 3,
+  }
+}
+
+function serializeBoard(board: BoardGrid): PlayerGameProgressDTO['board'] {
+  return board.map((row, r) =>
+    row.map(unit => r < 4 ? null : serializeUnit(unit))
+  )
+}
+
+function serializeBench(bench: BenchSlots): PlayerGameProgressDTO['bench'] {
+  return bench.map(serializeUnit)
+}
+
+function deserializeUnit(saved: SavedGameUnitDTO | null): Unit | null {
+  if (!saved) return null
+  try {
+    return recallUnit(makeUnit(getDefById(saved.id), saved.stars, false))
+  } catch {
+    return null
+  }
+}
+
+function deserializeBoard(saved: PlayerGameProgressDTO['board']): BoardGrid {
+  const board = emptyBoard()
+  saved.forEach((row, r) => {
+    if (r < 4 || r >= board.length) return
+    row.forEach((unit, c) => {
+      if (c < board[r].length) board[r][c] = deserializeUnit(unit)
+    })
+  })
+  return board
+}
+
+function deserializeBench(saved: PlayerGameProgressDTO['bench']): BenchSlots {
+  return Array.from({ length: 8 }, (_, i) => deserializeUnit(saved[i] ?? null))
+}
+
+function persistGameProgress(state: {
+  round: number
+  hp: number
+  gold: number
+  maxBoardSlots: number
+  board: BoardGrid
+  bench: BenchSlots
+}, stageOverride?: number): void {
   fetch('/api/player/endless', {
     method:      'POST',
     headers:     { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body:        JSON.stringify({ stage }),
+    body:        JSON.stringify({
+      stage: stageOverride ?? state.round,
+      hp: state.hp,
+      gold: state.gold,
+      maxBoardSlots: state.maxBoardSlots,
+      board: serializeBoard(state.board),
+      bench: serializeBench(state.bench),
+    }),
   }).catch(() => {})
 }
 
@@ -129,6 +188,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
       enemyPreview: generateEnemyPreview(safeStage, s.maxBoardSlots),
       log: [`Endless mode. Continue from Stage ${safeStage}.`],
     }))
+  },
+
+  setSavedProgress(progress) {
+    if (!progress || !Number.isFinite(progress.stage) || progress.stage < 1) return
+    const { phase, battleRunning, board, bench } = get()
+    if (phase !== 'prep' || battleRunning) return
+    if (getBoardUnitCount(board) > 0 || bench.some(Boolean)) return
+
+    const safeStage = Math.floor(progress.stage)
+    const maxBoardSlots = Math.max(1, Math.min(12, Math.floor(progress.maxBoardSlots)))
+    set({
+      round: safeStage,
+      hp: Math.max(0, Math.min(100, Math.floor(progress.hp))),
+      gold: Math.max(0, Math.min(MAX_GOLD, Math.floor(progress.gold))),
+      maxBoardSlots,
+      board: deserializeBoard(progress.board),
+      bench: deserializeBench(progress.bench),
+      enemyPreview: generateEnemyPreview(safeStage, maxBoardSlots),
+      log: [`Endless mode. Continue from Stage ${safeStage}.`],
+    })
   },
 
   selectUnit(sel) {
@@ -158,6 +237,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           ? addLog(s.log, result.log)
           : s.log,
       }))
+      persistGameProgress(get())
     } else {
       const unit = board[row][col]
       if (unit && !unit.enemy) {
@@ -173,6 +253,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (selected) {
       const result = placeOnBench(board, bench, selected, idx)
       set({ board: result.board, bench: result.bench, selected: result.selected })
+      persistGameProgress(get())
     } else {
       if (bench[idx]) set({ selected: { src: 'bench', idx } })
     }
@@ -201,6 +282,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         addLog(s.log, result.log),
       ),
     }))
+    persistGameProgress(get())
   },
 
   reroll() {
@@ -214,6 +296,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       shop: generateShop(),
       log: addLog(s.log, 'Shop refreshed!'),
     }))
+    persistGameProgress(get())
   },
 
   sellSelected() {
@@ -244,6 +327,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selected: null,
       log: addLog(s.log, `Sold ${unit!.name} +${earn}g`),
     }))
+    persistGameProgress(get())
   },
 
   startBattle() {
@@ -319,7 +403,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (result.win) {
       const newGold = Math.min(gold + result.goldEarned, MAX_GOLD)
       const nextStage = round + 1
-      persistEndlessStage(nextStage)
       set(s => ({
         gold: newGold,
         maxBoardSlots: newSlots,
@@ -330,6 +413,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         battleRunning: false,
         log: addLog(s.log, `Stage ${round} VICTORY! +${result.goldEarned}g, slots up to ${newSlots}`),
       }))
+      persistGameProgress(get(), nextStage)
     } else {
       const newHp = Math.max(0, hp - result.hpLost)
       set(s => ({
@@ -342,6 +426,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         battleRunning: false,
         log: addLog(s.log, `Stage ${round} DEFEAT! -${result.hpLost} HP, units recalled, slots up to ${newSlots}`),
       }))
+      persistGameProgress(get())
     }
   },
 
@@ -370,9 +455,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lastBattleResult: null,
       log: addLog(s.log, `Stage ${nextRound}. +${STAGE_INCOME}g Units recalled to formation. Slots: ${maxBoardSlots}`),
     }))
+    persistGameProgress(get())
   },
 
   resetGame() {
     set(initialState())
+    persistGameProgress(get())
   },
 }))

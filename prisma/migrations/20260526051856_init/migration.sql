@@ -7,6 +7,7 @@ CREATE TABLE "players" (
     "total_points" INTEGER NOT NULL DEFAULT 0,
     "level" INTEGER NOT NULL DEFAULT 1,
     "endless_stage" INTEGER NOT NULL DEFAULT 1,
+    "game_progress" JSONB,
     "streak_days" INTEGER NOT NULL DEFAULT 0,
     "last_login_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "referral_code" TEXT NOT NULL,

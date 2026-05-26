@@ -37,6 +37,7 @@ export default function GameHUD() {
   const lastBattleResult = useGameStore(s => s.lastBattleResult)
 
   const setSavedStage  = useGameStore(s => s.setSavedStage)
+  const setSavedProgress = useGameStore(s => s.setSavedProgress)
   const clickBoardCell = useGameStore(s => s.clickBoardCell)
   const clickBenchSlot = useGameStore(s => s.clickBenchSlot)
   const buyUnit        = useGameStore(s => s.buyUnit)
@@ -53,8 +54,12 @@ export default function GameHUD() {
   useEffect(() => { tickRef.current = tickBattle }, [tickBattle])
 
   useEffect(() => {
+    if (player?.gameProgress) {
+      setSavedProgress(player.gameProgress)
+      return
+    }
     if (player?.endlessStage) setSavedStage(player.endlessStage)
-  }, [player?.endlessStage, setSavedStage])
+  }, [player?.endlessStage, player?.gameProgress, setSavedProgress, setSavedStage])
 
   useEffect(() => {
     if (!battleRunning) {
