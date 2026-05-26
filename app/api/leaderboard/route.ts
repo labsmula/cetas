@@ -5,6 +5,18 @@ import { prisma } from '@/src/lib/db'
 import { resolveAuth } from '@/src/lib/api-auth'
 import type { LeaderboardEntryDTO } from '@/src/lib/api-types'
 
+type LeaderboardEntryWithPlayer = {
+  playerId: string
+  score: number
+  wins: number
+  streak: number
+  tier: string
+  player: {
+    name: string
+    avatarIdx: number
+  }
+}
+
 export async function GET(req: NextRequest) {
   const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '50'), 100)
 
@@ -12,13 +24,13 @@ export async function GET(req: NextRequest) {
   const auth = await resolveAuth(req)
 
   try {
-    const entries = await prisma.leaderboardEntry.findMany({
+    const entries: LeaderboardEntryWithPlayer[] = await prisma.leaderboardEntry.findMany({
       take:    limit,
       orderBy: { score: 'desc' },
       include: { player: { select: { name: true, avatarIdx: true } } },
     })
 
-    const leaderboard: LeaderboardEntryDTO[] = entries.map((e, i) => ({
+    const leaderboard: LeaderboardEntryDTO[] = entries.map((e: LeaderboardEntryWithPlayer, i: number) => ({
       rank:      i + 1,
       playerId:  e.playerId,
       name:      e.player.name,

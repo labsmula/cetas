@@ -5,18 +5,28 @@ import { prisma } from '@/src/lib/db'
 import { requireAuth } from '@/src/lib/api-auth'
 import type { FriendDTO } from '@/src/lib/api-types'
 
+type ReferralWithReferred = {
+  createdAt: Date
+  rewarded: boolean
+  referred: {
+    id: string
+    name: string
+    avatarIdx: number
+  }
+}
+
 export async function GET(req: NextRequest) {
   const { auth, error } = await requireAuth(req)
   if (error) return error
 
   try {
-    const referrals = await prisma.referral.findMany({
+    const referrals: ReferralWithReferred[] = await prisma.referral.findMany({
       where:   { referrerId: auth.playerId },
       include: { referred: true },
       orderBy: { createdAt: 'desc' },
     })
 
-    const friends: FriendDTO[] = referrals.map((r) => ({
+    const friends: FriendDTO[] = referrals.map((r: ReferralWithReferred) => ({
       id:        r.referred.id,
       name:      r.referred.name,
       avatarIdx: r.referred.avatarIdx,
