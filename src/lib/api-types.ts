@@ -98,6 +98,8 @@ export interface FriendDTO {
   avatarIdx: number
   joinedAt:  string
   rewarded:  boolean
+  relation:  'outbound' | 'inbound'
+  claimable: boolean
 }
 
 // ─── Leaderboard ─────────────────────────────────────────────────────────────

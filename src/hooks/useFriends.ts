@@ -67,6 +67,8 @@ export function useSubmitReferralCode() {
     mutationFn: submitReferralCode,
     onSuccess: async (data) => {
       await syncPlayerQuery(qc, { totalPoints: data.totalPoints })
+      await qc.invalidateQueries({ queryKey: friendKeys.list() })
+      await qc.refetchQueries({ queryKey: friendKeys.list(), type: 'active' })
     },
   })
 }
