@@ -14,7 +14,7 @@
 export default function GameLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-frame-outer">
-      <div className="mobile-shell game-bg game-scroll">
+      <div className="mobile-shell game-bg overflow-hidden" style={{ height: '100dvh' }}>
         {/* Black curtain fades out on mount — same as hub pages */}
         <div className="curtain" aria-hidden />
         {children}

@@ -234,7 +234,7 @@ export default function PixiBoard({
     <canvas
       ref={canvasRef} width={BOARD_W} height={BOARD_H}
       onClick={handleClick}
-      className="block w-full rounded-lg cursor-pointer"
+      className="game-board-canvas block rounded-lg cursor-pointer"
       style={{ imageRendering: 'pixelated' }}
       aria-label="Game board"
     />

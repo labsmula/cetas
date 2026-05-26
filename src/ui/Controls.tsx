@@ -24,14 +24,14 @@ export default function Controls({
   /* ── Prep phase ── */
   if (phase !== 'battle') {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <div className="flex gap-2">
           {/* Reroll */}
           <Button
             onClick={onReroll}
             variant="pixelBlue"
             size="md"
-            className="flex-1 text-[12px]"
+            className="min-h-[44px] flex-1 text-[11px]"
           >
             <Dices className="h-4 w-4" />
             Reroll
@@ -44,7 +44,7 @@ export default function Controls({
               onClick={onSell}
               variant="pixelDanger"
               size="md"
-              className="w-12 px-0"
+              className="min-h-[44px] w-12 px-0"
               aria-label="Sell selected unit"
             >
               <Coins className="h-4 w-4" />
@@ -56,15 +56,15 @@ export default function Controls({
             onClick={onBattle}
             variant="pixelGold"
             size="md"
-            className="flex-1 text-[13px] font-black"
+            className="min-h-[44px] flex-1 text-[12px] font-black"
           >
             <Swords className="h-4 w-4" />
             BATTLE!
           </Button>
         </div>
 
-        <p className="text-center text-[10px] text-[var(--text-3)]">
-          Units recall after battle · Sell is the only permanent removal
+        <p className="hidden text-center text-[10px] text-[var(--text-3)] min-[380px]:block">
+          Units recall after battle. Sell is permanent.
         </p>
       </div>
     )

@@ -16,9 +16,9 @@ export default function Bench({ bench, selected, onSlotClick }: BenchProps) {
   const filled = bench.filter(Boolean).length
 
   return (
-    <div className="relic-frame rounded-xl px-3 py-2.5">
+    <div className="relic-frame rounded-xl px-2.5 py-2">
       {/* Header */}
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-1.5 flex items-center justify-between">
         <span className="label">Reserve Bench</span>
         <div className="flex items-center gap-1">
           <div className="flex gap-0.5">
@@ -36,11 +36,11 @@ export default function Bench({ bench, selected, onSlotClick }: BenchProps) {
         </div>
       </div>
 
-      <div className="divider-gold mb-2" />
+      <div className="divider-gold mb-1.5" />
 
       {/* Slots */}
       <div
-        className="scroll-x flex flex-nowrap gap-1.5 pb-1"
+        className="scroll-x flex flex-nowrap gap-1.5 pb-0.5"
         role="region"
         aria-label="Reserve bench (scroll horizontally)"
       >
@@ -74,7 +74,7 @@ function BenchSlot({
       onClick={onClick}
       title={unit ? `${unit.name} ${unit.stars}* | ATK:${unit.atkVal} HP:${unit.curHp}` : 'Empty'}
       className={cn(
-        'flex flex-shrink-0 h-[72px] w-[62px] flex-col items-center justify-center gap-0.5 rounded-xl transition-all duration-150',
+        'flex h-[58px] w-[50px] flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl transition-all duration-150',
         !unit && [
           'border border-dashed border-[var(--border-gold)] bg-[rgba(4,16,33,0.4)]',
           'hover:border-[rgba(200,146,42,0.3)] hover:bg-[rgba(200,146,42,0.04)]',
@@ -94,17 +94,17 @@ function BenchSlot({
       {unit ? (
         <>
           {/* Avatar */}
-          <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-[rgba(74,158,255,0.3)] bg-[rgba(0,0,0,0.4)]">
-            <AvatarImage idx={unit.avatarIndex} size={36} stars={unit.stars} />
+          <div className="relative h-8 w-8 overflow-hidden rounded-lg border border-[rgba(74,158,255,0.3)] bg-[rgba(0,0,0,0.4)]">
+            <AvatarImage idx={unit.avatarIndex} size={32} stars={unit.stars} />
           </div>
 
           {/* Name */}
-          <span className="px-0.5 text-center text-[8px] font-bold leading-none text-[var(--text-1)]">
+          <span className="max-w-full truncate px-0.5 text-center text-[7px] font-bold leading-none text-[var(--text-1)]">
             {unit.name}
           </span>
 
           {/* Stats */}
-          <div className="flex gap-1 text-[7px]">
+          <div className="hidden gap-1 text-[7px] min-[390px]:flex">
             <StatBadge icon={Swords} value={unit.atkVal} colorClass="text-[var(--stat-atk)]" size="xs" />
             <StatBadge icon={Heart}  value={unit.curHp}  colorClass="text-[var(--stat-hp)]"  size="xs" />
           </div>
