@@ -7,6 +7,7 @@ export type PlayerDTORecord = {
   avatarIdx: number
   totalPoints: number
   level: number
+  endlessStage: number
   streakDays: number
   referralCode: string
   lastLoginAt: Date
@@ -21,6 +22,7 @@ export function toPlayerDTO(player: PlayerDTORecord): PlayerDTO {
     avatarIdx:       player.avatarIdx,
     totalPoints:     player.totalPoints,
     level:           player.level,
+    endlessStage:    player.endlessStage,
     streakDays:      player.streakDays,
     referralCode:    player.referralCode,
     lastLoginAt:     player.lastLoginAt.toISOString(),

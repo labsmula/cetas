@@ -156,6 +156,7 @@ function asPlayerDTO(value: Partial<PlayerDTO>): PlayerDTO | null {
     typeof value.avatarIdx === 'number' &&
     typeof value.totalPoints === 'number' &&
     typeof value.level === 'number' &&
+    typeof value.endlessStage === 'number' &&
     typeof value.streakDays === 'number' &&
     typeof value.referralCode === 'string' &&
     typeof value.lastLoginAt === 'string' &&

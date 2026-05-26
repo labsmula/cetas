@@ -20,6 +20,7 @@ export interface PlayerDTO {
   avatarIdx:       number
   totalPoints:     number
   level:           number
+  endlessStage:    number
   streakDays:      number
   referralCode:    string
   lastLoginAt:     string
