@@ -54,7 +54,7 @@ export default function LeaderboardClient() {
       {/* Stats row */}
       <div className="grid flex-shrink-0 grid-cols-3 gap-2">
         {[
-          { icon: <Trophy className="h-4 w-4 text-[var(--gold-hi)]" />, label: 'Top Points',  value: leaderboard[0]?.score.toLocaleString() ?? '-' },
+          { icon: <Trophy className="h-4 w-4 text-[var(--gold-hi)]" />, label: 'Top Points', value: leaderboard[0]?.score.toLocaleString() ?? '-' },
           { icon: <Swords className="h-4 w-4 text-[var(--enemy)]" />,  label: 'Best Streak', value: topStreak ? topStreak.toString() : '-' },
           { icon: <Shield className="h-4 w-4 text-[var(--ally)]" />,   label: 'Players',     value: leaderboard.length.toString() },
         ].map(s => (
@@ -137,7 +137,7 @@ export default function LeaderboardClient() {
                     <p className="font-display text-[13px] font-bold tabular-nums text-[var(--gold-hi)]">
                       {p.score.toLocaleString()}
                     </p>
-                    <p className="text-[9px] text-[var(--text-3)]">{p.wins}W</p>
+                    <p className="text-[9px] text-[var(--text-3)]">Stage {p.wins + 1}</p>
                   </div>
                 </div>
               )
