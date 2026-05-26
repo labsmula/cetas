@@ -22,38 +22,38 @@ export default function TopBar({ round, hp, gold, boardUnitCount, maxBoardSlots,
   const isPrep  = phase === 'prep'
 
   return (
-    <div className="relic-frame flex items-center gap-2 rounded-xl px-3 py-2">
+    <div className="relic-frame flex min-h-[38px] items-center gap-1.5 rounded-xl px-2 py-1.5">
 
       {/* ── Back button ── */}
       <Link
-        href="/"
-        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--border-gold)] bg-[rgba(200,146,42,0.08)] text-[var(--gold-mid)] transition-colors hover:bg-[rgba(200,146,42,0.16)]"
+        href="/home"
+        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--border-gold)] bg-[rgba(200,146,42,0.08)] text-[var(--gold-mid)] transition-colors hover:bg-[rgba(200,146,42,0.16)]"
         aria-label="Back to menu"
       >
         <span className="text-base font-bold leading-none">‹</span>
       </Link>
 
       {/* ── Title ── */}
-      <span className="font-display text-[10px] font-bold uppercase tracking-[0.22em] text-gold-gradient hidden xs:block">
+      <span className="hidden font-display text-[10px] font-bold uppercase tracking-[0.22em] text-gold-gradient min-[400px]:block">
         CETAS
       </span>
 
       <div className="flex-1" />
 
       {/* ── Gold ── */}
-      <div className="flex items-center gap-1.5 rounded-lg border border-[rgba(200,146,42,0.3)] bg-[rgba(200,146,42,0.08)] px-2.5 py-1.5">
+      <div className="flex items-center gap-1 rounded-lg border border-[rgba(200,146,42,0.3)] bg-[rgba(200,146,42,0.08)] px-2 py-1">
         <Image src={UI.goldIcon} alt="" width={14} height={14} unoptimized className="pixel" aria-hidden />
-        <span className="font-display text-[14px] font-bold text-[var(--gold-hi)]">{gold}</span>
+        <span className="font-display text-[13px] font-bold text-[var(--gold-hi)]">{gold}</span>
       </div>
 
       {/* ── HP ── */}
-      <div className="flex min-w-[60px] flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2.5 py-1.5">
+      <div className="flex min-w-[54px] flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2 py-1">
         <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1">
             <Shield className="h-3 w-3 flex-shrink-0" style={{ color: hpColor }} />
-            <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--text-3)]">HP</span>
+            <span className="text-[8px] font-semibold uppercase tracking-wider text-[var(--text-3)]">HP</span>
           </div>
-          <span className="font-display text-[13px] font-bold tabular-nums" style={{ color: hpColor }}>{hp}</span>
+          <span className="font-display text-[12px] font-bold tabular-nums" style={{ color: hpColor }}>{hp}</span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(11,78,162,0.25)]">
           <div
@@ -64,29 +64,29 @@ export default function TopBar({ round, hp, gold, boardUnitCount, maxBoardSlots,
       </div>
 
       {/* ── Round ── */}
-      <div className="flex flex-col items-center rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2.5 py-1.5">
+      <div className="flex flex-col items-center rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2 py-1">
         <span className="text-[8px] font-semibold uppercase tracking-wider text-[var(--text-3)]">Stage</span>
-        <span className="font-display text-[13px] font-bold text-[var(--text-1)]">{round}</span>
+        <span className="font-display text-[12px] font-bold text-[var(--text-1)]">{round}</span>
       </div>
 
       {/* ── Slots ── */}
-      <div className="flex flex-col items-center rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2.5 py-1.5">
+      <div className="flex flex-col items-center rounded-lg border border-[var(--border)] bg-[rgba(4,16,33,0.6)] px-2 py-1">
         <span className="text-[8px] font-semibold uppercase tracking-wider text-[var(--text-3)]">Slots</span>
-        <span className="font-display text-[13px] font-bold text-[var(--ally)]">{boardUnitCount}<span className="text-[10px] text-[var(--text-3)]">/{maxBoardSlots}</span></span>
+        <span className="font-display text-[12px] font-bold text-[var(--ally)]">{boardUnitCount}<span className="text-[9px] text-[var(--text-3)]">/{maxBoardSlots}</span></span>
       </div>
 
       {/* ── Phase badge ── */}
       <div
         className={cn(
-          'flex items-center gap-1 rounded-lg px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest',
+          'flex h-7 items-center gap-1 rounded-lg px-1.5 text-[9px] font-bold uppercase tracking-widest',
           isPrep
             ? 'border bg-[var(--prep-bg)] text-[var(--prep-text)] border-[var(--prep-border)]'
             : 'border bg-[var(--battle-bg)] text-[var(--battle-text)] border-[var(--battle-border)]'
         )}
       >
         {isPrep
-          ? <><Shield className="h-3 w-3" />Prep</>
-          : <><Swords className="h-3 w-3" />Battle</>
+          ? <><Shield className="h-3 w-3" /><span className="hidden min-[380px]:inline">Prep</span></>
+          : <><Swords className="h-3 w-3" /><span className="hidden min-[380px]:inline">Battle</span></>
         }
       </div>
     </div>

@@ -31,27 +31,26 @@ export default function EnemyIntel({ enemies, round }: EnemyIntelProps) {
   const threat   = getThreat(totalAtk)
 
   return (
-    <div className="relic-frame anim-fade rounded-xl px-3 py-2.5">
+    <div className="relic-frame anim-fade rounded-xl px-2.5 py-2">
       {/* Header */}
-      <div className="mb-2.5 flex items-center justify-between">
+      <div className="mb-1.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-3.5 w-3.5 text-[var(--warn)]" />
-          <span className="label">Enemy Forces — Stage {round}</span>
+          <span className="label">Enemy Stage {round}</span>
         </div>
         <div
-          className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+          className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider"
           style={{ color: threat.color, background: threat.bg, border: `1px solid ${threat.color}40` }}
         >
-          <span>⚠</span>
           <span>{threat.label}</span>
         </div>
       </div>
 
       {/* Divider */}
-      <div className="divider-gold mb-2.5" />
+      <div className="divider-gold mb-1.5" />
 
       {/* Cards */}
-      <div className="scroll-x flex gap-2 pb-1">
+      <div className="scroll-x flex gap-1.5 pb-0.5">
         {enemies.map((e, i) => <EnemyCard key={i} enemy={e} />)}
       </div>
     </div>
@@ -65,34 +64,34 @@ function EnemyCard({ enemy }: { enemy: EnemyPreview }) {
 
   return (
     <div className={cn(
-      'flex w-[80px] flex-shrink-0 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5',
+      'flex w-[68px] flex-shrink-0 flex-col items-center gap-1 rounded-xl px-1.5 py-1.5',
       'border border-[rgba(224,48,48,0.2)] bg-[rgba(224,48,48,0.04)]',
       'transition-colors hover:border-[rgba(224,48,48,0.35)] hover:bg-[rgba(224,48,48,0.08)]'
     )}>
       {/* Avatar */}
-      <div className="relative h-11 w-11 overflow-hidden rounded-lg border border-[rgba(224,48,48,0.35)] bg-[rgba(0,0,0,0.4)]">
-        <AvatarImage idx={enemy.avatarIndex} size={44} stars={enemy.stars} />
+      <div className="relative h-8 w-8 overflow-hidden rounded-lg border border-[rgba(224,48,48,0.35)] bg-[rgba(0,0,0,0.4)]">
+        <AvatarImage idx={enemy.avatarIndex} size={32} stars={enemy.stars} />
       </div>
 
       {/* Name */}
-      <span className="text-center text-[9px] font-bold leading-tight text-[var(--text-1)]">{enemy.name}</span>
+      <span className="max-w-full truncate text-center text-[8px] font-bold leading-tight text-[var(--text-1)]">{enemy.name}</span>
 
       {/* Trait badge */}
       <span
-        className="rounded-full px-1.5 py-[2px] text-[8px] font-bold"
+        className="rounded-full px-1 py-[1px] text-[7px] font-bold"
         style={{ background: ts.bg, color: ts.text, border: `1px solid ${ts.border}` }}
       >
         {enemy.traitLabel}
       </span>
 
       {/* Stats */}
-      <div className="flex gap-1.5 text-[8px]">
+      <div className="flex gap-1 text-[7px]">
         <StatBadge icon={Swords} value={enemy.atk} colorClass="text-[var(--stat-atk)]" />
         <StatBadge icon={Heart}  value={enemy.hp}  colorClass="text-[var(--stat-hp)]" />
       </div>
 
       {/* Speed */}
-      <span className="inline-flex items-center gap-0.5 text-[7px] text-[var(--text-3)]">
+      <span className="hidden items-center gap-0.5 text-[7px] text-[var(--text-3)] min-[390px]:inline-flex">
         {spdIcon}{spdLabel}
       </span>
     </div>
