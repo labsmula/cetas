@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import QueryProvider from "@/src/providers/QueryProvider";
+import WagmiProvider from "@/src/providers/WagmiProvider";
+import { WalletProvider } from "@/src/providers/WalletProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +38,15 @@ export default function RootLayout({
         <link rel="preload" as="image" href="/home_bg.png" />
         <link rel="preload" as="image" href="/landing-bg.jpg" />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <QueryProvider>
+          <WagmiProvider>
+            <WalletProvider>
+              {children}
+            </WalletProvider>
+          </WagmiProvider>
+        </QueryProvider>
+      </body>
     </html>
   );
 }
