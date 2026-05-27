@@ -29,7 +29,7 @@ import {
   toCETASWei,
   formatCETAS,
 } from '@/src/hooks/useCetasContracts'
-import { SEPOLIA } from '@/src/lib/contracts'
+import { MAINNET } from '@/src/lib/contracts'
 
 const QUICK_PRESETS = [10, 25, 50, 100]
 
@@ -39,14 +39,14 @@ export default function RedeemClient() {
   const { wallet, authStatus } = useWallet()
   const isReady = authStatus === 'authenticated' && !!wallet
   const w = wallet as `0x${string}` | undefined
-  const { isCorrectChain, switchToSepolia } = useChainStatus()
+  const { isCorrectChain, switchToMainnet } = useChainStatus()
   const needsChainSwitch = isReady && !isCorrectChain
 
   // ── On-chain reads ──────────────────────────────────────────────────────────
   const { data: balanceWei, refetch: refetchBalance } = useBalanceOf(w)
   const { data: exchangeRate } = useExchangeRate()
   const { data: swapPaused } = useSwapPaused()
-  const { data: allowanceWei, refetch: refetchAllowance } = useAllowance(w, SEPOLIA.CetasTreasury)
+  const { data: allowanceWei, refetch: refetchAllowance } = useAllowance(w, MAINNET.CetasTreasury)
 
   // ── State ────────────────────────────────────────────────────────────────────
   const [amount, setAmount] = useState('50')
@@ -73,7 +73,7 @@ export default function RedeemClient() {
 
   const validationMessage =
     !isReady ? 'Connect your wallet to swap.'
-    : needsChainSwitch ? `Switch to Celo Mainnet or Sepolia to swap.`
+    : needsChainSwitch ? `Switch to Celo to swap.`
     : swapPaused ? 'Swap is currently paused.'
     : parsedAmount <= 0 ? 'Enter an amount.'
     : !hasBalance ? 'Insufficient CETAS balance.'
@@ -88,7 +88,7 @@ export default function RedeemClient() {
     try {
       if (needsApproval) {
         setStep('approving')
-        const approveTx = await approveMutation.approve(SEPOLIA.CetasTreasury, amountWei)
+        const approveTx = await approveMutation.approve(MAINNET.CetasTreasury, amountWei)
         setTxHash(approveTx)
         await refetchAllowance()
       }
@@ -262,18 +262,18 @@ export default function RedeemClient() {
           <Button
             variant={needsChainSwitch ? "pixelDanger" : "pixelGold"}
             size="lg"
-            onClick={needsChainSwitch ? switchToSepolia : handleSwap}
+            onClick={needsChainSwitch ? switchToMainnet : handleSwap}
             disabled={needsChainSwitch ? false : (!canSwap || isBusy)}
             className="relative z-[1] w-full font-display text-[12px] font-black uppercase tracking-[0.16em]"
           >
             {needsChainSwitch ? (
-              <><AlertTriangle className="h-4 w-4" />Switch to Celo Mainnet or Sepolia</>
+              <><AlertTriangle className="h-4 w-4" />Switch to Celo</>
             ) : isBusy ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Wallet className="h-4 w-4" />
             )}
-            {needsChainSwitch ? `Switch to Celo Mainnet or Sepolia` : buttonLabel}
+            {needsChainSwitch ? `Switch to Celo` : buttonLabel}
           </Button>
         </section>
       </div>

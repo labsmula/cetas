@@ -9,11 +9,10 @@ import {
   useSwitchChain,
 } from 'wagmi'
 import { parseUnits, formatUnits, type Address } from 'viem'
-import { celo, celoSepolia } from 'wagmi/chains'
+import { celo } from 'wagmi/chains'
 import {
   CetasPointsABI,
   CetasTreasuryABI,
-  SEPOLIA,
   MAINNET,
   CETAS_DECIMALS,
 } from '@/src/lib/contracts'
@@ -21,18 +20,11 @@ import {
 export function useChainStatus() {
   const { chainId } = useAccount()
   const { switchChain } = useSwitchChain()
-  const isSepolia = chainId === celoSepolia.id
   const isMainnet = chainId === celo.id
-  // While connecting, chainId is undefined — treat as correct to avoid flash
-  const loading = chainId === undefined
-
   return {
-    isSepolia,
     isMainnet,
-    isLoading: loading,
-    isCorrectChain: loading || isSepolia || isMainnet,
+    isCorrectChain: chainId === undefined || isMainnet,
     chainId,
-    switchToSepolia: () => switchChain({ chainId: celoSepolia.id }),
     switchToMainnet: () => switchChain({ chainId: celo.id }),
   }
 }
@@ -40,7 +32,7 @@ export function useChainStatus() {
 function useAddrs() {
   const { chainId } = useAccount()
   if (chainId === celo.id) return MAINNET
-  if (chainId === celoSepolia.id) return SEPOLIA
+  if (chainId !== undefined) return MAINNET // fallback to mainnet
   return null
 }
 // ─── CetasPoints: Read ──────────────────────────────────────────────────
