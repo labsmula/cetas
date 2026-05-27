@@ -24,23 +24,27 @@ export async function POST(req: NextRequest) {
     })
 
     if (!referral)         return NextResponse.json({ error: 'Referral not found' }, { status: 404 })
-    if (referral.rewarded) return NextResponse.json({ error: 'Already claimed' }, { status: 400 })
 
-    const [, updatedPlayer] = await prisma.$transaction([
-      prisma.referral.update({
-        where: { id: referral.id },
+    const updatedPlayer = await prisma.$transaction(async tx => {
+      const claim = await tx.referral.updateMany({
+        where: { id: referral.id, rewarded: false },
         data:  { rewarded: true, rewardedAt: new Date() },
-      }),
-      prisma.player.update({
+      })
+      if (claim.count !== 1) throw new Error('ALREADY_CLAIMED')
+
+      return tx.player.update({
         where: { id: auth.playerId },
         data:  { totalPoints: { increment: REFERRAL_REWARD } },
-      }),
-    ])
+      })
+    })
 
     return NextResponse.json({
       data: { friendId, reward: REFERRAL_REWARD, totalPoints: updatedPlayer.totalPoints },
     })
   } catch (err) {
+    if (err instanceof Error && err.message === 'ALREADY_CLAIMED') {
+      return NextResponse.json({ error: 'Already claimed' }, { status: 400 })
+    }
     console.error('[POST /api/friends/claim]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

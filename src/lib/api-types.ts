@@ -26,6 +26,7 @@ export interface PlayerGameProgressDTO {
   hp: number
   gold: number
   maxBoardSlots: number
+  rerollsLeft?: number
   board: SavedGameBoardDTO
   bench: SavedGameBenchDTO
 }
@@ -36,8 +37,10 @@ export interface PlayerDTO {
   name:            string
   avatarIdx:       number
   totalPoints:     number
+  experience:      number
   level:           number
   endlessStage:    number
+  bestStage:       number
   gameProgress:    PlayerGameProgressDTO | null
   streakDays:      number
   referralCode:    string
@@ -91,6 +94,35 @@ export interface DailyClaimStatusDTO {
   reward:     DailyClaimDTO | null
 }
 
+// ─── Redeem ──────────────────────────────────────────────────────────────────
+export interface PointRedemptionDTO {
+  id:         string
+  points:     number
+  celoAmount: string
+  status:     'mocked' | 'pending' | 'confirmed' | 'failed'
+  txHash:     string | null
+  createdAt:  string
+}
+
+export interface RedeemSummaryDTO {
+  totalPoints: number
+  minPoints:   number
+  maxPoints:   number
+  rateLabel:   string
+  celoPerPoint: number
+  dailyLimit:  number
+  redeemedToday: number
+  mock:        boolean
+  history:     PointRedemptionDTO[]
+}
+
+export interface RedeemResponseDTO {
+  totalPoints: number
+  redemption:  PointRedemptionDTO
+  mock:        boolean
+  rateLabel:   string
+}
+
 // ─── Friends ─────────────────────────────────────────────────────────────────
 export interface FriendDTO {
   id:        string
@@ -109,6 +141,8 @@ export interface LeaderboardEntryDTO {
   name:      string
   avatarIdx: number
   score:     number
+  points:    number
+  bestStage: number
   wins:      number
   streak:    number
   tier:      string

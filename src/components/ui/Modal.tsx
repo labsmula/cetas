@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/src/lib/utils'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 interface ModalProps {
   show: boolean
@@ -9,15 +9,51 @@ interface ModalProps {
   children: React.ReactNode
   /** If true, clicking backdrop does NOT close */
   persistent?: boolean
+  ariaLabel?: string
+  ariaLabelledBy?: string
 }
 
-export function Modal({ show, onClose, children, persistent = false }: ModalProps) {
-  // Escape key
+export function Modal({ show, onClose, children, persistent = false, ariaLabel, ariaLabelledBy }: ModalProps) {
+  const panelRef = useRef<HTMLDivElement | null>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
+
   useEffect(() => {
-    if (!show || persistent) return
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose?.() }
+    if (!show) return
+    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.setTimeout(() => panelRef.current?.focus(), 0)
+
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !persistent) onClose?.()
+      if (e.key !== 'Tab') return
+
+      const focusable = panelRef.current?.querySelectorAll<HTMLElement>(
+        'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
+      )
+      if (!focusable?.length) {
+        e.preventDefault()
+        panelRef.current?.focus()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
     window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    return () => {
+      window.removeEventListener('keydown', handler)
+      document.body.style.overflow = previousOverflow
+      openerRef.current?.focus()
+    }
   }, [show, onClose, persistent])
 
   if (!show) return null
@@ -27,14 +63,18 @@ export function Modal({ show, onClose, children, persistent = false }: ModalProp
       className="fixed inset-0 z-50 flex items-center justify-center px-5"
       style={{ background: 'rgba(2,8,20,0.88)', backdropFilter: 'blur(8px)' }}
       onClick={persistent ? undefined : onClose}
-      role="dialog"
-      aria-modal="true"
     >
       {/* Panel */}
       <div
+        ref={panelRef}
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : 'Dialog')}
+        aria-labelledby={ariaLabelledBy}
+        tabIndex={-1}
         className={cn(
-          'rpg-modal anim-pop w-full max-w-[320px] overflow-hidden',
+          'rpg-modal anim-pop w-full max-w-[320px] overflow-hidden outline-none',
         )}
       >
         {children}

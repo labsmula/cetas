@@ -6,7 +6,6 @@ import { Coins, HeartPulse, Lock, Swords, Users } from 'lucide-react'
 import PlayerCard   from './home/PlayerCard'
 import DailyChest  from './home/DailyChest'
 import QuestPreview from './home/QuestPreview'
-import BottomNav   from './home/BottomNav'
 import { useWallet } from '@/src/providers/WalletProvider'
 import { usePlayer } from '@/src/hooks/usePlayer'
 
@@ -103,8 +102,6 @@ export default function HomeClient() {
           </div>
         </div>
       </section>
-
-      <BottomNav />
     </div>
   )
 }

@@ -3,26 +3,34 @@
 import { create } from 'zustand'
 import type { GameState, SelectedSource } from '../core/types'
 import { emptyBoard, getBoardUnitCount, placeOnBoard, placeOnBench } from '../systems/boardSystem'
-import { generateShop, checkMerge, buyUnit as buyUnitFn } from '../systems/shopSystem'
+import { generateShop, checkFormationMerge, buyUnit as buyUnitFn } from '../systems/shopSystem'
 import { generateEnemies, runBattleStep, evaluateBattleEnd, generateEnemyPreview } from '../systems/combatSystem'
 import { getDefById, makeUnit } from '../core/unitFactory'
 import {
   BATTLE_LIMIT_MS,
   INITIAL_STAGE,
   MAX_GOLD,
+  MAX_BOARD_SLOTS,
+  INITIAL_BOARD_SLOTS,
   SPEED_UP_FACTOR,
-  STAGE_INCOME,
   STARTING_GOLD,
   REROLL_COST,
+  REROLLS_PER_STAGE,
 } from '../constants'
 import type { BoardGrid, BenchSlots, Unit } from '../core/types'
 import type { PlayerGameProgressDTO, SavedGameUnitDTO } from '@/src/lib/api-types'
+import { playerKeys } from '@/src/hooks/usePlayer'
+import { queryClient } from '@/src/lib/queryClient'
 
 const MAX_LOG = 5
 
 function addLog(logs: string[], msg: string): string[] {
   const next = [...logs, msg]
   return next.length > MAX_LOG ? next.slice(next.length - MAX_LOG) : next
+}
+
+function addLogs(logs: string[], messages: string[]): string[] {
+  return messages.reduce((acc, msg) => addLog(acc, msg), logs)
 }
 
 interface GameActions {
@@ -47,13 +55,13 @@ interface GameActions {
 export type GameStore = GameState & GameActions
 
 function initialState(): GameState {
-  const initialMaxSlots = 3
   return {
     round: INITIAL_STAGE,
     hp: 100,
     gold: STARTING_GOLD,
     phase: 'prep',
-    maxBoardSlots: initialMaxSlots,
+    maxBoardSlots: INITIAL_BOARD_SLOTS,
+    rerollsLeft: REROLLS_PER_STAGE,
     board: emptyBoard(),
     bench: Array(8).fill(null),
     shop: generateShop(),
@@ -61,7 +69,7 @@ function initialState(): GameState {
     battleRunning: false,
     battleTimeMs: 0,
     speedUp: false,
-    enemyPreview: generateEnemyPreview(INITIAL_STAGE, initialMaxSlots),
+    enemyPreview: generateEnemyPreview(INITIAL_STAGE, INITIAL_BOARD_SLOTS),
     formationBoard: null,
     lastBattleResult: null,
     projectiles: [],
@@ -155,6 +163,7 @@ function persistGameProgress(state: {
   hp: number
   gold: number
   maxBoardSlots: number
+  rerollsLeft: number
   board: BoardGrid
   bench: BenchSlots
 }, stageOverride?: number): void {
@@ -167,10 +176,23 @@ function persistGameProgress(state: {
       hp: state.hp,
       gold: state.gold,
       maxBoardSlots: state.maxBoardSlots,
+      rerollsLeft: state.rerollsLeft,
       board: serializeBoard(state.board),
       bench: serializeBench(state.bench),
     }),
-  }).catch(() => {})
+  })
+    .then(async res => {
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.data) return
+      queryClient.setQueryData(playerKeys.me, (current: unknown) =>
+        current && typeof current === 'object'
+          ? { ...current, ...json.data }
+          : current
+      )
+      void queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    })
+    .catch(() => {})
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -197,12 +219,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (getBoardUnitCount(board) > 0 || bench.some(Boolean)) return
 
     const safeStage = Math.floor(progress.stage)
-    const maxBoardSlots = Math.max(1, Math.min(12, Math.floor(progress.maxBoardSlots)))
+    const maxBoardSlots = Math.max(1, Math.min(MAX_BOARD_SLOTS, Math.floor(progress.maxBoardSlots)))
     set({
       round: safeStage,
       hp: Math.max(0, Math.min(100, Math.floor(progress.hp))),
       gold: Math.max(0, Math.min(MAX_GOLD, Math.floor(progress.gold))),
       maxBoardSlots,
+      rerollsLeft: Math.max(0, Math.min(REROLLS_PER_STAGE, Math.floor(progress.rerollsLeft ?? REROLLS_PER_STAGE))),
       board: deserializeBoard(progress.board),
       bench: deserializeBench(progress.bench),
       enemyPreview: generateEnemyPreview(safeStage, maxBoardSlots),
@@ -227,15 +250,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (selected) {
       const result = placeOnBoard(board, bench, selected, row, col, maxBoardSlots)
+      const merged = result.error
+        ? { board: result.board, bench: result.bench, mergeLog: [] }
+        : checkFormationMerge(result.board, result.bench)
       set(s => ({
-        board: result.board,
-        bench: result.bench,
+        board: merged.board,
+        bench: merged.bench,
         selected: result.selected,
-        log: result.error
-          ? addLog(s.log, result.error)
-          : result.log
-          ? addLog(s.log, result.log)
-          : s.log,
+        log: addLogs(
+          result.error
+            ? addLog(s.log, result.error)
+            : result.log
+            ? addLog(s.log, result.log)
+            : s.log,
+          merged.mergeLog,
+        ),
       }))
       persistGameProgress(get())
     } else {
@@ -252,7 +281,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     if (selected) {
       const result = placeOnBench(board, bench, selected, idx)
-      set({ board: result.board, bench: result.bench, selected: result.selected })
+      const merged = checkFormationMerge(result.board, result.bench)
+      set(s => ({
+        board: merged.board,
+        bench: merged.bench,
+        selected: result.selected,
+        log: addLogs(s.log, merged.mergeLog),
+      }))
       persistGameProgress(get())
     } else {
       if (bench[idx]) set({ selected: { src: 'bench', idx } })
@@ -260,7 +295,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   buyUnit(shopIdx) {
-    const { shop, bench, gold } = get()
+    const { phase, shop, board, bench, gold } = get()
+    if (phase !== 'prep') return
     const item = shop[shopIdx]
     if (!item) return
 
@@ -270,37 +306,43 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return
     }
 
-    const { bench: newBench, mergeLog } = checkMerge(result.bench)
+    const { board: newBoard, bench: newBench, mergeLog } = checkFormationMerge(board, result.bench)
     const updatedShop = shop.map((s, i) => i === shopIdx ? result.shopItem : s)
 
     set(s => ({
       shop: updatedShop,
+      board: newBoard,
       bench: newBench,
       gold: result.gold,
-      log: mergeLog.reduce(
-        (acc, m) => addLog(acc, m),
-        addLog(s.log, result.log),
-      ),
+      selected: mergeLog.length ? null : s.selected,
+      log: addLogs(addLog(s.log, result.log), mergeLog),
     }))
     persistGameProgress(get())
   },
 
   reroll() {
-    const { gold } = get()
+    const { phase, gold, rerollsLeft } = get()
+    if (phase !== 'prep') return
+    if (rerollsLeft <= 0) {
+      set(s => ({ log: addLog(s.log, 'No shop refreshes left this stage.') }))
+      return
+    }
     if (gold < REROLL_COST) {
       set(s => ({ log: addLog(s.log, `Need ${REROLL_COST} gold to reroll!`) }))
       return
     }
     set(s => ({
       gold: s.gold - REROLL_COST,
+      rerollsLeft: Math.max(0, s.rerollsLeft - 1),
       shop: generateShop(),
-      log: addLog(s.log, 'Shop refreshed!'),
+      log: addLog(s.log, `Shop refreshed! ${Math.max(0, s.rerollsLeft - 1)} left.`),
     }))
     persistGameProgress(get())
   },
 
   sellSelected() {
-    const { selected, board, bench } = get()
+    const { phase, selected, board, bench } = get()
+    if (phase !== 'prep') return
     if (!selected) return
 
     const b = board.map(row => [...row])
@@ -395,13 +437,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   endBattle() {
     const { board, bench, round, maxBoardSlots, hp, gold, formationBoard } = get()
     const result = evaluateBattleEnd(board, round)
-    // Slot +1 always (win or lose) — capped at 12
-    const newSlots = Math.min(maxBoardSlots + 1, 12)
+    const newSlots = result.win ? Math.min(maxBoardSlots + result.slotsGained, MAX_BOARD_SLOTS) : maxBoardSlots
+    const resolvedResult = { ...result, slotsGained: newSlots > maxBoardSlots ? 1 : 0 }
     const recalledBoard = snapshotFormation(formationBoard ?? board)
     const recalledBench = recallBench(bench)
+    const newGold = Math.min(gold + result.goldEarned, MAX_GOLD)
 
     if (result.win) {
-      const newGold = Math.min(gold + result.goldEarned, MAX_GOLD)
       const nextStage = round + 1
       set(s => ({
         gold: newGold,
@@ -409,7 +451,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         board: recalledBoard,
         bench: recalledBench,
         formationBoard: null,
-        lastBattleResult: result,
+        lastBattleResult: resolvedResult,
         battleRunning: false,
         log: addLog(s.log, `Stage ${round} VICTORY! +${result.goldEarned}g, slots up to ${newSlots}`),
       }))
@@ -418,34 +460,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newHp = Math.max(0, hp - result.hpLost)
       set(s => ({
         hp: newHp,
+        gold: newGold,
         maxBoardSlots: newSlots,
         board: recalledBoard,
         bench: recalledBench,
         formationBoard: null,
-        lastBattleResult: result,
+        lastBattleResult: resolvedResult,
         battleRunning: false,
-        log: addLog(s.log, `Stage ${round} DEFEAT! -${result.hpLost} HP, units recalled, slots up to ${newSlots}`),
+        log: addLog(s.log, `Stage ${round} DEFEAT! -${result.hpLost} HP, +${result.goldEarned}g, retry stage ${round}`),
       }))
       persistGameProgress(get())
     }
   },
 
   nextRound() {
-    const { round, hp, gold, maxBoardSlots } = get()
+    const { round, hp, maxBoardSlots, lastBattleResult } = get()
     if (hp <= 0) {
       get().resetGame()
       return
     }
 
-    const nextRound = round + 1
-    const newGold = Math.min(gold + STAGE_INCOME, MAX_GOLD)
+    const nextRound = lastBattleResult?.win ? round + 1 : round
     const newEnemyPreview = generateEnemyPreview(nextRound, maxBoardSlots)
 
     set(s => ({
       round: nextRound,
       phase: 'prep',
-      gold: newGold,
       shop: generateShop(),
+      rerollsLeft: REROLLS_PER_STAGE,
       selected: null,
       battleRunning: false,
       battleTimeMs: 0,
@@ -453,7 +495,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       projectiles: [],
       enemyPreview: newEnemyPreview,
       lastBattleResult: null,
-      log: addLog(s.log, `Stage ${nextRound}. +${STAGE_INCOME}g Units recalled to formation. Slots: ${maxBoardSlots}`),
+      log: addLog(s.log, lastBattleResult?.win
+        ? `Stage ${nextRound}. Scout, shop, and push forward. Slots: ${maxBoardSlots}`
+        : `Retry Stage ${nextRound}. Shop refreshed. Slots: ${maxBoardSlots}`),
     }))
     persistGameProgress(get())
   },

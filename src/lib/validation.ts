@@ -6,6 +6,7 @@
  * Use `getZodMessage(error)` to extract the first human-readable message.
  */
 import { z } from 'zod'
+import { MAX_REDEEM_POINTS, MIN_REDEEM_POINTS } from './redeem-config'
 
 // ─── Zod v4 error helper ──────────────────────────────────────────────────────
 
@@ -46,6 +47,8 @@ export const avatarIdxSchema = z
 
 export const loginBodySchema = z.object({
   wallet: walletAddressSchema,
+  message: z.string().min(1).max(500).optional(),
+  signature: z.string().regex(/^0x[0-9a-fA-F]+$/, 'Invalid signature').optional(),
 })
 
 // ─── Player ───────────────────────────────────────────────────────────────────
@@ -67,9 +70,24 @@ export const claimTaskBodySchema = z.object({
   taskId: z.string().min(1, 'taskId required'),
 })
 
+export const taskDateQuerySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date')
+
 export const progressTaskBodySchema = z.object({
   taskId:    z.string().min(1, 'taskId required'),
   increment: z.number().int().min(1).max(100).optional().default(1),
+})
+
+// ─── Redeem ──────────────────────────────────────────────────────────────────
+
+export const redeemPointsBodySchema = z.object({
+  points: z
+    .number()
+    .int()
+    .min(MIN_REDEEM_POINTS, `Minimum redeem is ${MIN_REDEEM_POINTS} points`)
+    .max(MAX_REDEEM_POINTS),
+  idempotencyKey: z.string().uuid().optional(),
 })
 
 // ─── Friends ─────────────────────────────────────────────────────────────────

@@ -43,11 +43,42 @@ async function fetchMe(): Promise<PlayerDTO | null> {
 }
 
 async function login(wallet: string): Promise<LoginResponseDTO> {
+  let payload: { wallet: string; message?: string; signature?: string } = { wallet }
+  const ethereum = typeof window === 'undefined'
+    ? undefined
+    : (window as unknown as {
+        ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> }
+      }).ethereum
+
+  if (process.env.NODE_ENV !== 'development' || ethereum) {
+    const challengeRes = await fetch('/api/auth/challenge', {
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body:        JSON.stringify({ wallet }),
+    })
+    const challengeJson = await challengeRes.json()
+    if (!challengeRes.ok || challengeJson.error) {
+      throw new Error(challengeJson.error ?? 'Failed to create auth challenge')
+    }
+
+    const message = challengeJson.data.message as string
+    if (!ethereum) throw new Error('Wallet provider unavailable')
+
+    const signature = await ethereum.request({
+      method: 'personal_sign',
+      params: [message, wallet],
+    })
+    if (typeof signature !== 'string') throw new Error('Invalid wallet signature response')
+
+    payload = { wallet, message, signature }
+  }
+
   const res = await fetch('/api/auth/login', {
     method:      'POST',
     headers:     { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body:        JSON.stringify({ wallet }),
+    body:        JSON.stringify(payload),
   })
   const json = await res.json()
   if (!res.ok || json.error) throw new Error(json.error ?? 'Login failed')
@@ -155,8 +186,10 @@ function asPlayerDTO(value: Partial<PlayerDTO>): PlayerDTO | null {
     typeof value.name === 'string' &&
     typeof value.avatarIdx === 'number' &&
     typeof value.totalPoints === 'number' &&
+    typeof value.experience === 'number' &&
     typeof value.level === 'number' &&
     typeof value.endlessStage === 'number' &&
+    typeof value.bestStage === 'number' &&
     (value.gameProgress === null || typeof value.gameProgress === 'object') &&
     typeof value.streakDays === 'number' &&
     typeof value.referralCode === 'string' &&

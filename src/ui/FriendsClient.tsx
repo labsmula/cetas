@@ -6,9 +6,9 @@ import { Users, Copy, Check, Gift, UserPlus, Crown, Ticket, ArrowDownLeft, Arrow
 import { useFriends, useClaimReferralReward, useSubmitReferralCode } from '@/src/hooks/useFriends'
 import { useWallet } from '@/src/providers/WalletProvider'
 import { Button } from '@/src/components/ui/Button'
+import { EmptyState } from '@/src/components/ui/EmptyState'
 import { LoadingState } from '@/src/components/ui/LoadingState'
 import { cn } from '@/src/lib/utils'
-import BottomNav from './home/BottomNav'
 import type { FriendDTO } from '@/src/lib/api-types'
 
 const REFERRAL_REWARD = 100
@@ -234,17 +234,17 @@ export default function FriendsClient() {
           {isInitialLoading ? (
             <LoadingState label="Loading referrals" className="min-h-[180px]" />
           ) : friends.length === 0 ? (
-            <div className="relic-frame flex flex-col items-center gap-2 py-8 text-center">
-              <Users className="h-8 w-8 text-[var(--text-dim)]" />
-              <p className="font-display text-[12px] text-[var(--text-3)]">No referrals yet</p>
-              <p className="text-[10px] text-[var(--text-dim)]">Invite people or use a code to build your network</p>
-            </div>
+            <EmptyState
+              icon={<Users className="h-8 w-8" />}
+              title="No referrals yet"
+              description="Invite people or use a code to build your network"
+            />
           ) : visibleFriends.length === 0 ? (
-            <div className="relic-frame flex flex-col items-center gap-2 py-8 text-center">
-              <Users className="h-8 w-8 text-[var(--text-dim)]" />
-              <p className="font-display text-[12px] text-[var(--text-3)]">No rows in this tab</p>
-              <p className="text-[10px] text-[var(--text-dim)]">Switch tabs to see the other side of the network</p>
-            </div>
+            <EmptyState
+              icon={<Users className="h-8 w-8" />}
+              title="No rows in this tab"
+              description="Switch tabs to see the other side of the network"
+            />
           ) : (
             visibleFriends.map(friend => (
               <FriendRow
@@ -257,8 +257,6 @@ export default function FriendsClient() {
           )}
         </div>
       </div>
-
-      <BottomNav />
     </div>
   )
 }

@@ -26,24 +26,39 @@ export async function POST(req: NextRequest) {
     const def = await prisma.taskDefinition.findUnique({ where: { id: taskId } })
     if (!def) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
 
-    const progress = await prisma.taskProgress.findUnique({
-      where: { playerId_taskId_date: { playerId: auth.playerId, taskId, date } },
+    const [updatedProgress, updatedPlayer] = await prisma.$transaction(async tx => {
+      const claim = await tx.taskProgress.updateMany({
+        where: {
+          playerId: auth.playerId,
+          taskId,
+          date,
+          claimedAt: null,
+          progress: { gte: def.total },
+        },
+        data: { done: true, claimedAt: new Date() },
+      })
+
+      if (claim.count !== 1) {
+        const progress = await tx.taskProgress.findUnique({
+          where: { playerId_taskId_date: { playerId: auth.playerId, taskId, date } },
+        })
+        if (!progress) throw new Error('NO_PROGRESS')
+        if (progress.claimedAt) throw new Error('ALREADY_CLAIMED')
+        throw new Error('TASK_NOT_COMPLETED')
+      }
+
+      const [progress, player] = await Promise.all([
+        tx.taskProgress.findUniqueOrThrow({
+          where: { playerId_taskId_date: { playerId: auth.playerId, taskId, date } },
+        }),
+        tx.player.update({
+          where: { id: auth.playerId },
+          data:  { totalPoints: { increment: def.reward } },
+        }),
+      ])
+
+      return [progress, player] as const
     })
-
-    if (!progress)                  return NextResponse.json({ error: 'No progress found for today' }, { status: 400 })
-    if (progress.progress < def.total) return NextResponse.json({ error: 'Task not completed yet' }, { status: 400 })
-    if (progress.claimedAt)         return NextResponse.json({ error: 'Already claimed' }, { status: 400 })
-
-    const [updatedProgress, updatedPlayer] = await prisma.$transaction([
-      prisma.taskProgress.update({
-        where: { id: progress.id },
-        data:  { done: true, claimedAt: new Date() },
-      }),
-      prisma.player.update({
-        where: { id: auth.playerId },
-        data:  { totalPoints: { increment: def.reward } },
-      }),
-    ])
 
     return NextResponse.json({
       data: {
@@ -54,6 +69,15 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err) {
+    if (err instanceof Error && err.message === 'NO_PROGRESS') {
+      return NextResponse.json({ error: 'No progress found for today' }, { status: 400 })
+    }
+    if (err instanceof Error && err.message === 'TASK_NOT_COMPLETED') {
+      return NextResponse.json({ error: 'Task not completed yet' }, { status: 400 })
+    }
+    if (err instanceof Error && err.message === 'ALREADY_CLAIMED') {
+      return NextResponse.json({ error: 'Already claimed' }, { status: 400 })
+    }
     console.error('[POST /api/tasks/claim]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

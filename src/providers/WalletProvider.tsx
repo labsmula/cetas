@@ -8,10 +8,8 @@
  * - useAuth: restore session on mount → login when address appears
  * - Exposes player profile, auth status, and onboarding flag
  *
- * Rules from docs.minipay.xyz:
- * - Auto-connect on page load, NEVER show a connect button
- * - Do NOT sign a message for authentication
- * - window.ethereum?.isMiniPay to detect environment
+ * Auto-connect on page load. The server session is issued only after the
+ * connected wallet signs a short auth challenge.
  */
 
 import { createContext, useContext, useEffect, useState } from 'react'

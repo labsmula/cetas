@@ -26,7 +26,7 @@ async function openDailyChest() {
   if (!res.ok || json.error) throw new Error(json.error ?? 'Failed to open chest')
   return json.data as {
     date: string; rewardType: string; amount: number; label: string
-    claimedAt: string; totalPoints: number
+    claimedAt: string; experience: number; level: number
   }
 }
 
@@ -54,7 +54,7 @@ export function useOpenChest() {
           claimedAt:  data.claimedAt,
         },
       })
-      await syncPlayerQuery(qc, { totalPoints: data.totalPoints })
+      await syncPlayerQuery(qc, { experience: data.experience, level: data.level })
     },
   })
 }

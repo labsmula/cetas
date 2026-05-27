@@ -7,8 +7,10 @@ export type PlayerDTORecord = {
   name: string
   avatarIdx: number
   totalPoints: number
+  experience: number
   level: number
   endlessStage: number
+  bestStage: number
   gameProgress: Prisma.JsonValue | null
   streakDays: number
   referralCode: string
@@ -23,8 +25,10 @@ export function toPlayerDTO(player: PlayerDTORecord): PlayerDTO {
     name:            player.name,
     avatarIdx:       player.avatarIdx,
     totalPoints:     player.totalPoints,
+    experience:      player.experience,
     level:           player.level,
     endlessStage:    player.endlessStage,
+    bestStage:       player.bestStage,
     gameProgress:    player.gameProgress as PlayerGameProgressDTO | null,
     streakDays:      player.streakDays,
     referralCode:    player.referralCode,

@@ -19,6 +19,10 @@ const CHEST_REWARDS = [
   { rewardType: 'xp', label: 'Battle XP',  amount: 250 },
 ]
 
+function levelForExperience(experience: number): number {
+  return Math.max(1, Math.floor(experience / 500) + 1)
+}
+
 export async function GET(req: NextRequest) {
   const { auth, error } = await requireAuth(req)
   if (error) return error
@@ -61,13 +65,24 @@ export async function POST(req: NextRequest) {
 
     const reward = CHEST_REWARDS[Math.floor(Math.random() * CHEST_REWARDS.length)]
 
+    const current = await prisma.player.findUnique({
+      where: { id: auth.playerId },
+      select: { experience: true },
+    })
+    if (!current) return NextResponse.json({ error: 'Player not found' }, { status: 404 })
+
+    const nextExperience = current.experience + reward.amount
+
     const [claim, updatedPlayer] = await prisma.$transaction([
       prisma.dailyClaim.create({
         data: { playerId: auth.playerId, date, ...reward },
       }),
       prisma.player.update({
         where: { id: auth.playerId },
-        data:  { totalPoints: { increment: reward.amount } },
+        data:  {
+          experience: { increment: reward.amount },
+          level:      { set: levelForExperience(nextExperience) },
+        },
       }),
     ])
 
@@ -78,7 +93,8 @@ export async function POST(req: NextRequest) {
         amount:      claim.amount,
         label:       claim.label,
         claimedAt:   claim.claimedAt.toISOString(),
-        totalPoints: updatedPlayer.totalPoints,
+        experience:  updatedPlayer.experience,
+        level:       updatedPlayer.level,
       },
     })
   } catch (err) {

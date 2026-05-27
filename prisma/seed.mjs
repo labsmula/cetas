@@ -6,8 +6,8 @@ const require = createRequire(import.meta.url)
 
 // Load env
 const dotenv = require('dotenv')
-dotenv.config()
 dotenv.config({ path: '.env.local', override: false })
+dotenv.config({ override: false })
 
 const { PrismaClient } = require('@prisma/client')
 const { PrismaNeon }   = require('@prisma/adapter-neon')

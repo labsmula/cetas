@@ -15,6 +15,7 @@ type NavItem = {
 const ITEMS: NavItem[] = [
   { href: '/home',        label: 'Home',    src: '/assets/ui/home.png',        alt: 'Home'        },
   { href: '/tasks',       label: 'Quests',  src: '/assets/ui/task.png',        alt: 'Quests'      },
+  { href: '/redeem',      label: 'Redeem',  src: '/assets/ui/coin.png', alt: 'Redeem'    },
   { href: '/friends',     label: 'Friends', src: '/assets/ui/friends.png',     alt: 'Friends'     },
   { href: '/leaderboard', label: 'Ranks',   src: '/assets/ui/leaderboard.png', alt: 'Leaderboard' },
 ]
@@ -41,7 +42,8 @@ export default function BottomNav() {
             aria-current={isCurrent ? 'page' : undefined}
             className={cn(
               'relative flex flex-1 flex-col items-center justify-center gap-[3px]',
-              'py-2.5 px-1 transition-all duration-150 no-underline',
+              'py-2.5 px-1 transition-[background-color,transform] duration-150 no-underline',
+              'hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold-hi)]',
             )}
           >
             <Image

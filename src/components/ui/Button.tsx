@@ -7,7 +7,7 @@ import { cn } from '@/src/lib/utils'
 
 const buttonVariants = cva(
   // Base — NO border-none here so variants can add their own borders
-  'inline-flex items-center justify-center gap-1.5 font-bold tracking-wide cursor-pointer select-none whitespace-nowrap rounded-lg transition-[transform,filter,box-shadow] duration-75 active:scale-95 active:brightness-85 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none',
+  'inline-flex items-center justify-center gap-1.5 font-bold tracking-wide cursor-pointer select-none whitespace-nowrap rounded-lg transition-[transform,filter,box-shadow] duration-75 active:scale-95 active:brightness-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold-hi)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-deep)] disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none',
   {
     variants: {
       variant: {

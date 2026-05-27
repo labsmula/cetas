@@ -1,26 +1,34 @@
 /**
  * POST /api/auth/login
  *
- * Called right after wagmi auto-connects with the wallet address.
- * Loads the player profile if it exists, then issues a session cookie.
- * New wallets get a wallet-only session; /api/player creates the profile
- * after onboarding submits a valid name.
- *
- * Why no SIWE here:
- * MiniPay docs explicitly state "Do not prompt users to sign a message to
- * access your site or to authenticate." The injected window.ethereum address
- * is already trusted by MiniPay. The httpOnly session cookie protects against
- * XSS replay on the server side.
+ * Called after the wallet signs the short auth challenge from
+ * /api/auth/challenge. New wallets get a wallet-only session; /api/player
+ * creates the profile after onboarding submits a valid name.
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyMessage } from 'viem'
 import { prisma } from '@/src/lib/db'
-import { signSession, setSessionCookie } from '@/src/lib/session'
+import {
+  clearChallengeCookie,
+  getAuthChallengeFromRequest,
+  signSession,
+  setSessionCookie,
+} from '@/src/lib/session'
 import { loginBodySchema, getZodMessage } from '@/src/lib/validation'
 import { toPlayerDTO } from '@/src/lib/player-dto'
 import type { LoginResponseDTO } from '@/src/lib/api-types'
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+function expectedMessage(walletAddress: string, nonce: string): string {
+  return [
+    'Sign in to CETAS.',
+    '',
+    `Address: ${walletAddress}`,
+    `Nonce: ${nonce}`,
+  ].join('\n')
 }
 
 export async function POST(req: NextRequest) {
@@ -34,7 +42,30 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    const { wallet } = parsed.data
+    const { wallet, message, signature } = parsed.data
+
+    const challenge = await getAuthChallengeFromRequest(req)
+    const allowDevBypass = process.env.NODE_ENV === 'development' && !signature && !message
+
+    if (!allowDevBypass) {
+      if (!challenge || challenge.walletAddress !== wallet) {
+        return NextResponse.json({ error: 'Auth challenge expired. Please try again.' }, { status: 401 })
+      }
+
+      const expected = expectedMessage(wallet, challenge.nonce)
+      if (message !== expected || !signature) {
+        return NextResponse.json({ error: 'Invalid auth challenge.' }, { status: 401 })
+      }
+
+      const valid = await verifyMessage({
+        address: wallet as `0x${string}`,
+        message,
+        signature: signature as `0x${string}`,
+      })
+      if (!valid) {
+        return NextResponse.json({ error: 'Invalid wallet signature.' }, { status: 401 })
+      }
+    }
 
     // ── Load existing player ───────────────────────────────────────────────
     let player = await prisma.player.findUnique({ where: { walletAddress: wallet } })
@@ -53,6 +84,32 @@ export async function POST(req: NextRequest) {
         where: { id: player.id },
         data:  { lastLoginAt: new Date(), streakDays },
       })
+
+      if (streakDays >= 3) {
+        const streakTask = await prisma.taskDefinition.findUnique({ where: { id: 'streak' } })
+        if (streakTask) {
+          await prisma.taskProgress.upsert({
+            where: {
+              playerId_taskId_date: {
+                playerId: player.id,
+                taskId:   'streak',
+                date:     today,
+              },
+            },
+            create: {
+              playerId: player.id,
+              taskId:   'streak',
+              date:     today,
+              progress: Math.min(streakDays, streakTask.total),
+              done:     true,
+            },
+            update: {
+              progress: Math.min(streakDays, streakTask.total),
+              done:     true,
+            },
+          })
+        }
+      }
     }
 
     // ── Issue session JWT ──────────────────────────────────────────────────
@@ -69,6 +126,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({ data: dto })
     setSessionCookie(res, token)
+    clearChallengeCookie(res)
     return res
 
   } catch (err) {

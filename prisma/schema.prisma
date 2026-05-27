@@ -16,8 +16,10 @@ model Player {
   name             String   @unique
   avatarIdx        Int      @default(1) @map("avatar_idx")
   totalPoints      Int      @default(0) @map("total_points")
+  experience       Int      @default(0)
   level            Int      @default(1)
   endlessStage     Int      @default(1) @map("endless_stage")
+  bestStage        Int      @default(1) @map("best_stage")
   gameProgress     Json?    @map("game_progress")
   streakDays       Int      @default(0) @map("streak_days")
   lastLoginAt      DateTime @default(now()) @map("last_login_at")
@@ -32,6 +34,7 @@ model Player {
   referralsMade Referral[]     @relation("referrer")
   referredBy    Referral?      @relation("referred")
   matchEntries  MatchEntry[]
+  pointRedemptions PointRedemption[]
   leaderboard   LeaderboardEntry?
 
   @@map("players")
@@ -85,6 +88,34 @@ model DailyClaim {
 
   @@unique([playerId, date])
   @@map("daily_claims")
+}
+
+// ─── Points Redemption (mock until on-chain contract is ready) ────────────────
+model PointRedemption {
+  id          String   @id @default(cuid())
+  playerId    String   @map("player_id")
+  walletAddress String  @map("wallet_address")
+  idempotencyKey String? @map("idempotency_key")
+  points      Int
+  celoAmount  String   @map("celo_amount")
+  tokenAmountWei BigInt @map("token_amount_wei")
+  chainId     Int?     @map("chain_id")
+  tokenAddress String? @map("token_address")
+  status      String   @default("mocked") // mocked | pending | confirmed | failed
+  txHash      String?  @map("tx_hash")
+  submittedAt DateTime? @map("submitted_at")
+  confirmedAt DateTime? @map("confirmed_at")
+  failedAt    DateTime? @map("failed_at")
+  failureReason String? @map("failure_reason")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@unique([playerId, idempotencyKey])
+  @@unique([txHash])
+  @@map("point_redemptions")
 }
 
 // ─── Friends & Referrals ──────────────────────────────────────────────────────

@@ -52,9 +52,16 @@ export const STARTING_GOLD     = 4        // tighter endless-mode opening econom
 export const MAX_GOLD          = 15       // prevents late-game runaway banking
 export const STAGE_INCOME      = 3        // baseline gold gained between stages
 export const WIN_GOLD_BONUS    = 2        // extra gold for winning a stage
+export const LOSS_GOLD_REWARD  = 1        // small retry reward after defeat
+export const REROLLS_PER_STAGE = 3        // limited shop refreshes per prep phase
+export const ENDLESS_STAGE_POINT_REWARD = 120  // dummy points until on-chain rewards are ready
+export const ENDLESS_STAGE_XP_REWARD    = 100  // account progression, separate from points
+export const ENDLESS_STAGE_RANK_WEIGHT  = 1_000 // leaderboard prioritizes stage depth
 
 // ── Board ─────────────────────────────────────────────────────────────────────
 export const BOARD_COLS        = 8
 export const BOARD_ROWS        = 4
 export const BENCH_SIZE        = 8
 export const INITIAL_STAGE     = 1
+export const INITIAL_BOARD_SLOTS = 3
+export const MAX_BOARD_SLOTS   = 8        // mobile-readable cap for active troops

@@ -1,5 +1,6 @@
 import LandingClient from '@/src/ui/LandingClient'
 import AppHeader from '@/src/ui/hub/AppHeader'
+import BottomNav from '@/src/ui/home/BottomNav'
 
 /**
  * Shared layout for all hub pages: /home, /tasks, /leaderboard, /friends
@@ -21,9 +22,11 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
 
         <AppHeader />
 
-        <main className="relative z-10 flex flex-1 flex-col overflow-hidden px-4 pb-[72px] pt-2">
+        <main className="relative z-10 flex flex-1 flex-col overflow-hidden px-4 pb-[calc(72px+env(safe-area-inset-bottom,0px))] pt-2">
           {children}
         </main>
+
+        <BottomNav />
 
         {/* Keeps music alive when navigating between hub pages */}
         <LandingClient />

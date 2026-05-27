@@ -4,9 +4,9 @@ import Image from 'next/image'
 import { CheckSquare } from 'lucide-react'
 import { useTasks, useClaimTask } from '@/src/hooks/useTasks'
 import { useWallet } from '@/src/providers/WalletProvider'
+import { EmptyState } from '@/src/components/ui/EmptyState'
 import { LoadingRows } from '@/src/components/ui/LoadingState'
 import TaskItem from './tasks/TaskItem'
-import BottomNav from './home/BottomNav'
 
 export default function TasksClient() {
   const { authStatus } = useWallet()
@@ -58,11 +58,11 @@ export default function TasksClient() {
         {isInitialLoading
           ? <LoadingRows count={6} />
           : tasks.length === 0 ? (
-              <div className="relic-frame flex flex-col items-center gap-2 py-8 text-center">
-                <CheckSquare className="h-8 w-8 text-[var(--text-dim)]" />
-                <p className="font-display text-[12px] text-[var(--text-3)]">No quests yet</p>
-                <p className="text-[10px] text-[var(--text-dim)]">Daily quests will appear after setup</p>
-              </div>
+              <EmptyState
+                icon={<CheckSquare className="h-8 w-8" />}
+                title="No quests yet"
+                description="Daily quests will appear after setup"
+              />
             )
           : tasks.map(task => (
               <TaskItem
@@ -84,8 +84,6 @@ export default function TasksClient() {
             ))
         }
       </div>
-
-      <BottomNav />
     </div>
   )
 }

@@ -22,6 +22,7 @@ export default function PlayerCard() {
   const name            = player?.name            ?? 'Commander'
   const avatarIdx       = player?.avatarIdx       ?? 1
   const totalPoints     = player?.totalPoints     ?? 0
+  const experience      = player?.experience      ?? 0
   const streakDays      = player?.streakDays      ?? 0
   const level           = player?.level           ?? 1
   const nameChangesLeft = player?.nameChangesLeft ?? 0
@@ -31,7 +32,7 @@ export default function PlayerCard() {
   const nameCheck = useCheckName(nameInput, 400, skipCheck)
 
   const xpForNext = level * 500
-  const xpCurrent = totalPoints % xpForNext
+  const xpCurrent = experience % xpForNext
   const xpPct     = Math.min(100, Math.round((xpCurrent / xpForNext) * 100))
   const pad        = String(avatarIdx).padStart(2, '0')
 

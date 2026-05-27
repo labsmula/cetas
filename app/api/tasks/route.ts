@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/src/lib/db'
 import { requireAuth } from '@/src/lib/api-auth'
+import { taskDateQuerySchema } from '@/src/lib/validation'
 import type { TaskWithProgressDTO } from '@/src/lib/api-types'
 
 type TaskDefinitionRow = {
@@ -30,7 +31,12 @@ export async function GET(req: NextRequest) {
   const { auth, error } = await requireAuth(req)
   if (error) return error
 
-  const date = req.nextUrl.searchParams.get('date') ?? todayKey()
+  const rawDate = req.nextUrl.searchParams.get('date') ?? todayKey()
+  const parsedDate = taskDateQuerySchema.safeParse(rawDate)
+  if (!parsedDate.success) {
+    return NextResponse.json({ error: 'Invalid date' }, { status: 400 })
+  }
+  const date = parsedDate.data
 
   try {
     const [defs, progresses]: [TaskDefinitionRow[], TaskProgressRow[]] = await Promise.all([
