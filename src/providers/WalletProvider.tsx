@@ -40,6 +40,8 @@ interface WalletContextValue {
   updatePlayer: (patch: Partial<PlayerDTO>) => void
   /** Clear session + disconnect */
   signOut:     () => Promise<void>
+  /** Retry login after an error */
+  retryLogin:  () => void
 }
 
 const WalletContext = createContext<WalletContextValue>({
@@ -52,6 +54,7 @@ const WalletContext = createContext<WalletContextValue>({
   isNewPlayer:  false,
   updatePlayer: () => {},
   signOut:      async () => {},
+  retryLogin:   () => {},
 })
 
 // ─── Inner bridge — must live inside WagmiProvider ───────────────────────────
@@ -93,7 +96,7 @@ function WalletContextBridge({ children }: { children: React.ReactNode }) {
   const effectiveConnected = isConnected || (process.env.NODE_ENV === 'development' && !!devWallet)
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-  const { status: authStatus, player, isNewPlayer, updatePlayer, signOut } =
+  const { status: authStatus, player, isNewPlayer, updatePlayer, signOut, retryLogin } =
     useAuth(effectiveWallet)
 
   const connecting =
@@ -120,6 +123,7 @@ function WalletContextBridge({ children }: { children: React.ReactNode }) {
       isNewPlayer,
       updatePlayer,
       signOut,
+      retryLogin,
     }}>
       {children}
     </WalletContext.Provider>

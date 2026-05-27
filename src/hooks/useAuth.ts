@@ -44,11 +44,22 @@ async function fetchMe(): Promise<PlayerDTO | null> {
 
 async function login(wallet: string): Promise<LoginResponseDTO> {
   let payload: { wallet: string; message?: string; signature?: string } = { wallet }
-  const ethereum = typeof window === 'undefined'
-    ? undefined
-    : (window as unknown as {
-        ethereum?: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> }
-      }).ethereum
+
+  // Resolve ethereum provider — MiniPay injects window.ethereum but may not
+  // be ready immediately on first paint; poll briefly before giving up.
+  const getEthereum = async () => {
+    type EthProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> }
+    const win = typeof window === 'undefined' ? undefined : window as unknown as { ethereum?: EthProvider }
+    if (win?.ethereum) return win.ethereum
+    // Wait up to 2 s for MiniPay to inject the provider
+    for (let i = 0; i < 20; i++) {
+      await new Promise(r => setTimeout(r, 100))
+      if (win?.ethereum) return win.ethereum
+    }
+    return undefined
+  }
+
+  const ethereum = await getEthereum()
 
   if (process.env.NODE_ENV !== 'development' || ethereum) {
     const challengeRes = await fetch('/api/auth/challenge', {
@@ -63,12 +74,19 @@ async function login(wallet: string): Promise<LoginResponseDTO> {
     }
 
     const message = challengeJson.data.message as string
-    if (!ethereum) throw new Error('Wallet provider unavailable')
+    if (!ethereum) throw new Error('Wallet provider unavailable — open this app inside MiniPay')
 
-    const signature = await ethereum.request({
-      method: 'personal_sign',
-      params: [message, wallet],
-    })
+    let signature: unknown
+    try {
+      // MiniPay uses personal_sign with params [message, address]
+      signature = await ethereum.request({
+        method: 'personal_sign',
+        params: [message, wallet],
+      })
+    } catch (signErr) {
+      const msg = signErr instanceof Error ? signErr.message : String(signErr)
+      throw new Error(`Signature rejected: ${msg}`)
+    }
     if (typeof signature !== 'string') throw new Error('Invalid wallet signature response')
 
     payload = { wallet, message, signature }
@@ -130,9 +148,10 @@ export function useAuth(wallet: string | null) {
     if (!wallet) return
     // Already authenticated with this wallet
     if (authedWalletRef.current === wallet) return
-    // Still restoring — wait for it to finish
+    // Still restoring — wait for it to finish (do NOT mark wallet yet)
     if (state.status === 'restoring') return
 
+    // Mark wallet AFTER the early-return guards so we don't skip login
     authedWalletRef.current = wallet
 
     const runLogin = async () => {
@@ -150,6 +169,7 @@ export function useAuth(wallet: string | null) {
           qc.setQueryData(['player', 'me'], data.player)
         }
       } catch (err) {
+        // Reset so a retry (e.g. user taps "Try Again") can re-trigger login
         authedWalletRef.current = null
         setState({ status: 'error', player: null, isNewPlayer: false, error: String(err) })
       }
@@ -157,6 +177,13 @@ export function useAuth(wallet: string | null) {
 
     void runLogin()
   }, [wallet, state.status, qc])
+
+  // ── Retry login after error ───────────────────────────────────────────────
+  const retryLogin = useCallback(() => {
+    if (state.status !== 'error') return
+    // Reset status so Step 2 effect re-runs
+    setState(s => ({ ...s, status: 'unauthenticated', error: null }))
+  }, [state.status])
 
   // ── Logout ────────────────────────────────────────────────────────────────
   const signOut = useCallback(async () => {
@@ -177,7 +204,7 @@ export function useAuth(wallet: string | null) {
     })
   }, [qc])
 
-  return { ...state, signOut, updatePlayer }
+  return { ...state, signOut, updatePlayer, retryLogin }
 }
 
 function asPlayerDTO(value: Partial<PlayerDTO>): PlayerDTO | null {

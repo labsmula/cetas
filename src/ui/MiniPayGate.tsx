@@ -15,7 +15,7 @@ interface MiniPayGateProps {
 }
 
 export default function MiniPayGate({ children }: MiniPayGateProps) {
-  const { authStatus, connecting, isMiniPay } = useWallet()
+  const { authStatus, connecting, isMiniPay, retryLogin } = useWallet()
 
   // Dev: always pass through
   if (process.env.NODE_ENV === 'development') {
@@ -43,14 +43,24 @@ export default function MiniPayGate({ children }: MiniPayGateProps) {
         <div className="relic-frame flex max-w-[320px] flex-col items-center gap-4 px-6 py-8 text-center">
           <div className="rpg-modal-bar w-full" />
           <p className="font-display text-[18px] font-bold uppercase tracking-wider text-[var(--gold-hi)]">
-            MiniPay Required
+            {authStatus === 'error' ? 'Connection Failed' : 'MiniPay Required'}
           </p>
           <p className="text-[13px] leading-relaxed text-[var(--text-3)]">
             {authStatus === 'error'
-              ? 'Connection failed. Unlock MiniPay and try again.'
+              ? 'Could not sign in. Make sure MiniPay is unlocked and try again.'
               : 'Please open this app from the MiniPay wallet to continue.'}
           </p>
-          {isMiniPay && (
+          {isMiniPay && authStatus === 'error' && (
+            <button
+              onClick={retryLogin}
+              className="mt-1 rounded-xl border border-[var(--border-gold)] bg-[rgba(200,146,42,0.1)] px-5 py-2
+                         font-display text-[13px] font-bold uppercase tracking-wider text-[var(--gold-hi)]
+                         active:opacity-70 transition-opacity"
+            >
+              Try Again
+            </button>
+          )}
+          {isMiniPay && authStatus === 'unauthenticated' && (
             <p className="text-[11px] text-[var(--ok)]">MiniPay detected — retrying…</p>
           )}
         </div>
