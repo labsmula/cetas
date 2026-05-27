@@ -1,15 +1,26 @@
-// POST /api/tasks/progress — increment task progress (called from game events)
+// POST /api/tasks/progress — internal-only task progress updater.
+// Client gameplay must not call this directly; public task rewards should be
+// derived from server-side game state transitions.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/src/lib/db'
 import { requireAuth } from '@/src/lib/api-auth'
 import { progressTaskBodySchema, getZodMessage } from '@/src/lib/validation'
 
+const INTERNAL_TASK_TOKEN = process.env.INTERNAL_TASK_TOKEN
+
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
 export async function POST(req: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    const token = req.headers.get('x-cetas-internal-token')
+    if (!INTERNAL_TASK_TOKEN || token !== INTERNAL_TASK_TOKEN) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+  }
+
   const { auth, error } = await requireAuth(req)
   if (error) return error
 

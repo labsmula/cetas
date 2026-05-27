@@ -87,6 +87,7 @@ export const redeemPointsBodySchema = z.object({
     .int()
     .min(MIN_REDEEM_POINTS, `Minimum redeem is ${MIN_REDEEM_POINTS} points`)
     .max(MAX_REDEEM_POINTS),
+  idempotencyKey: z.string().uuid().optional(),
 })
 
 // ─── Friends ─────────────────────────────────────────────────────────────────

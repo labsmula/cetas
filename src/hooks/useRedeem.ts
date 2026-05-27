@@ -16,11 +16,12 @@ async function fetchRedeemSummary(): Promise<RedeemSummaryDTO> {
 }
 
 async function redeemPoints(points: number) {
+  const idempotencyKey = crypto.randomUUID()
   const res = await fetch('/api/redeem', {
     method:      'POST',
     headers:     { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body:        JSON.stringify({ points }),
+    body:        JSON.stringify({ points, idempotencyKey }),
   })
   const json = await res.json()
   if (!res.ok || json.error) throw new Error(json.error ?? 'Failed to redeem points')

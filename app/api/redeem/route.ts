@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: getZodMessage(parsed.error) }, { status: 400 })
     }
 
-    const { points } = parsed.data
+    const { points, idempotencyKey } = parsed.data
     const celoAmount = pointsToCeloAmount(points)
     const tokenAmountWei = pointsToTokenAmountWei(points)
     const startOfToday = new Date()
@@ -103,6 +103,25 @@ export async function POST(req: NextRequest) {
 
     const [updated, redemption] = await prisma.$transaction(async tx => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${auth.playerId}))`
+
+      if (idempotencyKey) {
+        const existing = await tx.pointRedemption.findUnique({
+          where: {
+            playerId_idempotencyKey: {
+              playerId: auth.playerId,
+              idempotencyKey,
+            },
+          },
+        })
+        if (existing) {
+          const player = await tx.player.findUnique({
+            where: { id: auth.playerId },
+            select: { totalPoints: true },
+          })
+          if (!player) throw new Error('PLAYER_NOT_FOUND')
+          return [player, existing] as const
+        }
+      }
 
       const todayRows = await tx.pointRedemption.findMany({
         where: {
@@ -137,6 +156,7 @@ export async function POST(req: NextRequest) {
         data: {
           playerId: auth.playerId,
           walletAddress: player.walletAddress,
+          idempotencyKey,
           points,
           celoAmount,
           tokenAmountWei,

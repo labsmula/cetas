@@ -95,6 +95,7 @@ model PointRedemption {
   id          String   @id @default(cuid())
   playerId    String   @map("player_id")
   walletAddress String  @map("wallet_address")
+  idempotencyKey String? @map("idempotency_key")
   points      Int
   celoAmount  String   @map("celo_amount")
   tokenAmountWei BigInt @map("token_amount_wei")
@@ -112,6 +113,7 @@ model PointRedemption {
   player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@index([playerId, createdAt])
+  @@unique([playerId, idempotencyKey])
   @@unique([txHash])
   @@map("point_redemptions")
 }

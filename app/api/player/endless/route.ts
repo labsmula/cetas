@@ -34,6 +34,42 @@ const endlessProgressSchema = z.object({
   bench: savedBenchSchema.optional(),
 }).strict()
 
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+async function incrementTaskProgress(playerId: string, taskIds: string[]): Promise<void> {
+  if (taskIds.length === 0) return
+  const date = todayKey()
+  const defs = await prisma.taskDefinition.findMany({
+    where: { id: { in: taskIds }, active: true },
+    select: { id: true, total: true },
+  })
+
+  for (const def of defs) {
+    const progress = await prisma.taskProgress.upsert({
+      where:  { playerId_taskId_date: { playerId, taskId: def.id, date } },
+      create: {
+        playerId,
+        taskId: def.id,
+        date,
+        progress: 1,
+        done: def.total <= 1,
+      },
+      update: { progress: { increment: 1 } },
+    })
+
+    const capped = Math.min(progress.progress, def.total)
+    const done = capped >= def.total
+    if (progress.progress !== capped || progress.done !== done) {
+      await prisma.taskProgress.update({
+        where: { id: progress.id },
+        data: { progress: capped, done },
+      })
+    }
+  }
+}
+
 export async function POST(req: NextRequest) {
   const { auth, error } = await requireAuth(req)
   if (error) return error
@@ -52,6 +88,7 @@ export async function POST(req: NextRequest) {
 
     const nextStage = Math.max(1, Math.min(parsed.data.stage, current.endlessStage + 1))
     const nextBest = Math.max(current.bestStage, nextStage)
+    const stageAdvanced = nextStage > current.endlessStage
     const progress = parsed.data.board && parsed.data.bench
       ? {
           stage: nextStage,
@@ -72,6 +109,10 @@ export async function POST(req: NextRequest) {
         ...(progress && { gameProgress: progress }),
       },
     })
+
+    if (stageAdvanced) {
+      await incrementTaskProgress(auth.playerId, ['play1', 'play3', 'win1'])
+    }
 
     const player = await prisma.player.findUnique({
       where: { id: auth.playerId },
