@@ -53,6 +53,32 @@ export async function POST(req: NextRequest) {
         where: { id: player.id },
         data:  { lastLoginAt: new Date(), streakDays },
       })
+
+      if (streakDays >= 3) {
+        const streakTask = await prisma.taskDefinition.findUnique({ where: { id: 'streak' } })
+        if (streakTask) {
+          await prisma.taskProgress.upsert({
+            where: {
+              playerId_taskId_date: {
+                playerId: player.id,
+                taskId:   'streak',
+                date:     today,
+              },
+            },
+            create: {
+              playerId: player.id,
+              taskId:   'streak',
+              date:     today,
+              progress: Math.min(streakDays, streakTask.total),
+              done:     true,
+            },
+            update: {
+              progress: Math.min(streakDays, streakTask.total),
+              done:     true,
+            },
+          })
+        }
+      }
     }
 
     // ── Issue session JWT ──────────────────────────────────────────────────

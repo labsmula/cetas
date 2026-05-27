@@ -18,7 +18,7 @@ import {
   REROLLS_PER_STAGE,
 } from '../constants'
 import type { BoardGrid, BenchSlots, Unit } from '../core/types'
-import type { PlayerGameProgressDTO, SavedGameUnitDTO } from '@/src/lib/api-types'
+import type { PlayerGameProgressDTO, SavedGameUnitDTO, TaskWithProgressDTO } from '@/src/lib/api-types'
 import { playerKeys } from '@/src/hooks/usePlayer'
 import { queryClient } from '@/src/lib/queryClient'
 
@@ -158,6 +158,32 @@ function deserializeBench(saved: PlayerGameProgressDTO['bench']): BenchSlots {
   return Array.from({ length: 8 }, (_, i) => deserializeUnit(saved[i] ?? null))
 }
 
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function trackTaskProgress(taskId: string, increment = 1): void {
+  fetch('/api/tasks/progress', {
+    method:      'POST',
+    headers:     { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body:        JSON.stringify({ taskId, increment }),
+  })
+    .then(async res => {
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.data) return
+      queryClient.setQueryData<TaskWithProgressDTO[]>(
+        ['tasks', todayKey()],
+        old => old?.map(task =>
+          task.id === json.data.taskId
+            ? { ...task, progress: json.data.progress, done: json.data.done }
+            : task
+        )
+      )
+    })
+    .catch(() => {})
+}
+
 function persistGameProgress(state: {
   round: number
   hp: number
@@ -265,6 +291,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           merged.mergeLog,
         ),
       }))
+      if (merged.mergeLog.length > 0) trackTaskProgress('merge1')
       persistGameProgress(get())
     } else {
       const unit = board[row][col]
@@ -287,6 +314,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selected: result.selected,
         log: addLogs(s.log, merged.mergeLog),
       }))
+      if (merged.mergeLog.length > 0) trackTaskProgress('merge1')
       persistGameProgress(get())
     } else {
       if (bench[idx]) set({ selected: { src: 'bench', idx } })
@@ -315,6 +343,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selected: mergeLog.length ? null : s.selected,
       log: addLogs(addLog(s.log, result.log), mergeLog),
     }))
+    if (mergeLog.length > 0) trackTaskProgress('merge1')
     persistGameProgress(get())
   },
 
@@ -334,6 +363,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       shop: generateShop(),
       log: addLog(s.log, `Shop refreshed! ${Math.max(0, s.rerollsLeft - 1)} left.`),
     }))
+    trackTaskProgress('reroll5')
     persistGameProgress(get())
   },
 
@@ -439,8 +469,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const recalledBench = recallBench(bench)
     const newGold = Math.min(gold + result.goldEarned, MAX_GOLD)
 
+    trackTaskProgress('play1')
+    trackTaskProgress('play3')
+
     if (result.win) {
       const nextStage = round + 1
+      trackTaskProgress('win1')
       set(s => ({
         gold: newGold,
         maxBoardSlots: newSlots,

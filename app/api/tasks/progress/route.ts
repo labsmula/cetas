@@ -38,17 +38,17 @@ export async function POST(req: NextRequest) {
       update: { progress: { increment } },
     })
 
-    // Cap at total
     const capped = Math.min(progress.progress, def.total)
-    if (progress.progress > def.total) {
+    const done = capped >= def.total
+    if (progress.progress !== capped || progress.done !== done) {
       await prisma.taskProgress.update({
         where: { id: progress.id },
-        data:  { progress: def.total, done: true },
+        data:  { progress: capped, done },
       })
     }
 
     return NextResponse.json({
-      data: { taskId, progress: capped, done: capped >= def.total },
+      data: { taskId, progress: capped, done },
     })
   } catch (err) {
     console.error('[POST /api/tasks/progress]', err)
