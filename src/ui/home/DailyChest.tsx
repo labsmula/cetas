@@ -123,11 +123,12 @@ export default function DailyChest() {
           </div>
         </button>
       ) : (
-      <button
-        onClick={handleClaim}
-        disabled={claimed || isBusy}
-        aria-label="Claim daily CETAS"
-        className={cn(
+        <button
+          onClick={handleClaim}
+          disabled={claimed || isBusy}
+          aria-label="Claim daily CETAS"
+          data-testid="daily-claim-button"
+          className={cn(
           'relic-frame flex w-full items-center gap-2.5 px-3 py-2.5 transition-all',
           claimed || isBusy
             ? 'cursor-not-allowed opacity-50'

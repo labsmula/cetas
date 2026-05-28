@@ -34,6 +34,7 @@ export default function Controls({
             size="md"
             disabled={rerollsLeft <= 0}
             className="min-h-[44px] flex-1 text-[11px]"
+            data-testid="reroll-button"
           >
             <Dices className="h-4 w-4" />
             Reroll
@@ -48,6 +49,7 @@ export default function Controls({
               size="md"
               className="min-h-[44px] w-12 px-0"
               aria-label="Sell selected unit"
+              data-testid="sell-button"
             >
               <Coins className="h-4 w-4" />
             </Button>
@@ -59,6 +61,7 @@ export default function Controls({
             variant="pixelGold"
             size="md"
             className="min-h-[44px] flex-1 text-[12px] font-black"
+            data-testid="battle-button"
           >
             <Swords className="h-4 w-4" />
             BATTLE!
