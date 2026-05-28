@@ -47,8 +47,9 @@ export default function Bench({ bench, selected, onSlotClick }: BenchProps) {
         {bench.map((unit, i) => {
           const isSel = selected?.src === 'bench' && (selected as { src: 'bench'; idx: number }).idx === i
           return (
-            <BenchSlot
+          <BenchSlot
               key={i}
+              index={i}
               unit={unit}
               isSelected={isSel}
               onClick={() => onSlotClick(i)}
@@ -62,9 +63,11 @@ export default function Bench({ bench, selected, onSlotClick }: BenchProps) {
 
 function BenchSlot({
   unit,
+  index,
   isSelected,
   onClick,
 }: {
+  index: number
   unit: BenchSlots[number]
   isSelected: boolean
   onClick: () => void
@@ -73,6 +76,7 @@ function BenchSlot({
     <button
       onClick={onClick}
       title={unit ? `${unit.name} ${unit.stars}* | ATK:${unit.atkVal} HP:${unit.curHp}` : 'Empty'}
+      data-testid={`bench-slot-${index}`}
       className={cn(
         'flex h-[58px] w-[50px] flex-shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl transition-all duration-150',
         !unit && [

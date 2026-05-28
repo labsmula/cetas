@@ -61,6 +61,7 @@ export default function HomeClient() {
         <div className="absolute bottom-10 grid w-full grid-cols-2 gap-2 px-1 pb-1">
           <Link
             href="/game"
+            data-testid="enter-game-button"
             className="group relative overflow-hidden rounded-xl border
                        border-[var(--border-gold)] bg-[rgba(4,16,33,0.88)]
                        px-3 py-2.5 no-underline backdrop-blur-sm transition-all

@@ -149,6 +149,7 @@ export default function LandingGate({ className }: { className?: string }) {
                 value={name}
                 onChange={e => setName(e.target.value.slice(0, 20))}
                 onKeyDown={e => e.key === 'Enter' && canProceed && handleNameNext()}
+                data-testid="onboarding-name-input"
                 placeholder="e.g. IronWarlord"
                 maxLength={20}
                 autoFocus
@@ -182,6 +183,7 @@ export default function LandingGate({ className }: { className?: string }) {
             className="w-full font-black tracking-wider"
             onClick={handleNameNext}
             disabled={!canProceed || nameCheck.status === 'checking'}
+            data-testid="onboarding-name-continue"
           >
             {nameCheck.status === 'checking'
               ? <><Loader2 className="h-4 w-4 animate-spin" /> Checking…</>
@@ -211,8 +213,12 @@ export default function LandingGate({ className }: { className?: string }) {
             {Array.from({ length: AVATAR_COUNT }, (_, i) => i + 1).map(n => {
               const p      = String(n).padStart(2, '0')
               const active = avatarIdx === n
-              return (
-                <button key={n} onClick={() => setAvatarIdx(n)} className={cn(
+                return (
+                <button
+                  key={n}
+                  onClick={() => setAvatarIdx(n)}
+                  data-testid={`onboarding-avatar-${n}`}
+                  className={cn(
                   'relative overflow-hidden rounded-xl border-2 transition-all',
                   active ? 'border-[var(--gold-mid)] shadow-[0_0_8px_rgba(200,146,42,0.5)]'
                          : 'border-[var(--border)] hover:border-[var(--border-gold)]'
@@ -228,7 +234,7 @@ export default function LandingGate({ className }: { className?: string }) {
             <Button variant="pixelGhost" size="md" className="flex-shrink-0 px-3" onClick={() => setStep('name')} disabled={saving}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="pixelGold" size="md" className="flex-1 font-black tracking-wider" onClick={handleFinish} disabled={saving}>
+            <Button variant="pixelGold" size="md" className="flex-1 font-black tracking-wider" onClick={handleFinish} disabled={saving} data-testid="onboarding-save">
               {saving
                 ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
                 : <><Swords className="h-4 w-4" /> Enter the Arena</>

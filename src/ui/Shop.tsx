@@ -31,20 +31,21 @@ export default function Shop({ shop, onBuy }: ShopProps) {
       {/* Cards */}
       <div className="scroll-x flex min-h-0 flex-1 gap-1.5 pb-0">
         {shop.map((item, i) => (
-          <ShopCard key={i} item={item} onBuy={() => onBuy(i)} />
+          <ShopCard key={i} index={i} item={item} onBuy={() => onBuy(i)} />
         ))}
       </div>
     </div>
   )
 }
 
-function ShopCard({ item, onBuy }: { item: ShopItem; onBuy: () => void }) {
+function ShopCard({ index, item, onBuy }: { index: number; item: ShopItem; onBuy: () => void }) {
   const tc = TRAIT_COLORS[item.traitLabel] ?? TRAIT_COLORS.Melee
 
   return (
     <button
       onClick={item.sold ? undefined : onBuy}
       disabled={item.sold}
+      data-testid={`shop-item-${index}`}
       className={cn(
         'game-shop-card relative flex w-[66px] flex-shrink-0 flex-col items-center justify-end gap-1 overflow-hidden rounded-xl px-1.5 pb-1.5 pt-2 transition-all duration-150 min-[390px]:w-[70px]',
         item.sold
