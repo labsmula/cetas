@@ -1,26 +1,20 @@
-// POST /api/tasks/progress — internal-only task progress updater.
-// Client gameplay must not call this directly; public task rewards should be
-// derived from server-side game state transitions.
+// POST /api/tasks/progress — authenticated task progress updater.
+// Used by gameplay actions that happen client-side (reroll, merge, etc.).
+// Battle completion progress is still derived server-side via /api/player/endless.
+
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/src/lib/db'
 import { requireAuth } from '@/src/lib/api-auth'
 import { progressTaskBodySchema, getZodMessage } from '@/src/lib/validation'
 
-const INTERNAL_TASK_TOKEN = process.env.INTERNAL_TASK_TOKEN
+const CLIENT_PROGRESS_TASKS = new Set(['reroll5', 'merge1'])
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
 export async function POST(req: NextRequest) {
-  if (process.env.NODE_ENV === 'production') {
-    const token = req.headers.get('x-cetas-internal-token')
-    if (!INTERNAL_TASK_TOKEN || token !== INTERNAL_TASK_TOKEN) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    }
-  }
-
   const { auth, error } = await requireAuth(req)
   if (error) return error
 
@@ -31,6 +25,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: getZodMessage(parsed.error) }, { status: 400 })
     }
     const { taskId, increment } = parsed.data
+
+    if (!CLIENT_PROGRESS_TASKS.has(taskId)) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
 
     const date = todayKey()
 

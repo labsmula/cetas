@@ -177,7 +177,7 @@ function persistGameProgress(state: {
   rerollsLeft: number
   board: BoardGrid
   bench: BenchSlots
-}, stageOverride?: number, onSaved?: (data: Record<string, unknown>) => void): void {
+}, stageOverride?: number, onSaved?: (data: Record<string, unknown>) => void, battleFlags?: { battleCompleted: boolean; battleWon: boolean }): void {
   fetch('/api/player/endless', {
     method:      'POST',
     headers:     { 'Content-Type': 'application/json' },
@@ -190,6 +190,7 @@ function persistGameProgress(state: {
       rerollsLeft: state.rerollsLeft,
       board: serializeBoard(state.board),
       bench: serializeBench(state.bench),
+      ...(battleFlags ?? {}),
     }),
   })
     .then(async res => {
@@ -204,6 +205,30 @@ function persistGameProgress(state: {
       void queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
       void queryClient.invalidateQueries({ queryKey: ['tasks'] })
       void queryClient.invalidateQueries()
+    })
+    .catch(() => {})
+}
+
+/** Fire-and-forget task progress increment (non-critical) */
+function bumpTask(taskId: string) {
+  fetch('/api/tasks/progress', {
+    method:      'POST',
+    headers:     { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body:        JSON.stringify({ taskId }),
+  })
+    .then(async res => {
+      if (!res.ok) return
+      const json = await res.json().catch(() => null)
+      if (json?.data) {
+        const today = new Date().toISOString().slice(0, 10)
+        queryClient.setQueryData(['tasks', today], (old: unknown) => {
+          if (!Array.isArray(old)) return old
+          return old.map((t: Record<string, unknown>) =>
+            t.id === taskId ? { ...t, progress: json.data.progress, done: json.data.done } : t
+          )
+        })
+      }
     })
     .catch(() => {})
 }
@@ -279,6 +304,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           merged.mergeLog,
         ),
       }))
+      if (merged.mergeLog.length > 0) bumpTask('merge1')
       persistGameProgress(get())
     } else {
       const unit = board[row][col]
@@ -301,6 +327,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selected: result.selected,
         log: addLogs(s.log, merged.mergeLog),
       }))
+      if (merged.mergeLog.length > 0) bumpTask('merge1')
       persistGameProgress(get())
     } else {
       if (bench[idx]) set({ selected: { src: 'bench', idx } })
@@ -330,6 +357,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selected: mergeLog.length ? null : s.selected,
       log: addLogs(addLog(s.log, result.log), mergeLog),
     }))
+    if (mergeLog.length > 0) bumpTask('merge1')
     persistGameProgress(get())
   },
 
@@ -350,6 +378,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       shop: generateShop(),
       log: addLog(s.log, `Shop refreshed! ${Math.max(0, s.rerollsLeft - 1)} left.`),
     }))
+    bumpTask('reroll5')
     persistGameProgress(get())
   },
 
@@ -500,7 +529,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
               : `Stage saved. No CETAS reward issued.`,
           ),
         }))
-      })
+      }, { battleCompleted: true, battleWon: true })
     } else {
       const newHp = Math.max(0, hp - result.hpLost)
       set(s => ({
@@ -515,7 +544,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         battleRunning: false,
         log: addLog(s.log, `Stage ${round} DEFEAT! -${result.hpLost} HP, +${result.goldEarned}g, retry stage ${round}`),
       }))
-      persistGameProgress(get())
+      persistGameProgress(get(), undefined, undefined, { battleCompleted: true, battleWon: false })
     }
   },
 
