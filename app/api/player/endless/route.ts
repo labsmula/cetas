@@ -36,6 +36,10 @@ const endlessProgressSchema = z.object({
   rerollsLeft: z.number().int().min(0).max(REROLLS_PER_STAGE).optional(),
   board: savedBoardSchema.optional(),
   bench: savedBenchSchema.optional(),
+  /** true when a battle was just completed (win or loss) */
+  battleCompleted: z.boolean().optional(),
+  /** true when the battle was won */
+  battleWon: z.boolean().optional(),
 }).strict()
 
 function todayKey(): string {
@@ -126,8 +130,15 @@ export async function POST(req: NextRequest) {
 
     let rewardTxHashes: string[] = []
     let rewardError: string | null = null
+
+    // Increment play tasks on every completed battle (win or loss)
+    if (parsed.data.battleCompleted) {
+      const battleTasks = ['play1', 'play3']
+      if (parsed.data.battleWon) battleTasks.push('win1')
+      await incrementTaskProgress(auth.playerId, battleTasks)
+    }
+
     if (stageAdvanced) {
-      await incrementTaskProgress(auth.playerId, ['play1', 'play3', 'win1'])
       try {
         rewardTxHashes = await grantCetasReward(auth.walletAddress as Address, ENDLESS_STAGE_CETAS_REWARD)
       } catch (err) {
