@@ -22,6 +22,18 @@ const cetasTreasuryAbi = CetasTreasuryABI as Abi
 
 export const MAX_ALLOWANCE = (1n << 256n) - 1n
 
+export function useChainStatus() {
+  const { chainId } = useAccount()
+  const { switchChain } = useSwitchChain()
+  const isMainnet = chainId === celo.id
+  return {
+    isMainnet,
+    isCorrectChain: chainId === undefined || isMainnet,
+    chainId,
+    switchToMainnet: () => switchChain({ chainId: celo.id }),
+  }
+}
+
 function useAddrs() {
   const { chainId } = useAccount()
   if (chainId === celo.id) return MAINNET
