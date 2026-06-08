@@ -20,7 +20,7 @@ import {
 const cetasPointsAbi = CetasPointsABI as Abi
 const cetasTreasuryAbi = CetasTreasuryABI as Abi
 
-export const MAX_ALLOWANCE = (1n << 256n) - 1n
+export const MAX_ALLOWANCE = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') as bigint
 
 export function useChainStatus() {
   const { chainId } = useAccount()
