@@ -20,17 +20,7 @@ import {
 const cetasPointsAbi = CetasPointsABI as Abi
 const cetasTreasuryAbi = CetasTreasuryABI as Abi
 
-export function useChainStatus() {
-  const { chainId } = useAccount()
-  const { switchChain } = useSwitchChain()
-  const isMainnet = chainId === celo.id
-  return {
-    isMainnet,
-    isCorrectChain: chainId === undefined || isMainnet,
-    chainId,
-    switchToMainnet: () => switchChain({ chainId: celo.id }),
-  }
-}
+export const MAX_ALLOWANCE = (1n << 256n) - 1n
 
 function useAddrs() {
   const { chainId } = useAccount()
@@ -38,6 +28,7 @@ function useAddrs() {
   if (chainId !== undefined) return MAINNET // fallback to mainnet
   return null
 }
+
 // ─── CetasPoints: Read ──────────────────────────────────────────────────
 
 export function useBalanceOf(address?: Address) {

@@ -27,6 +27,7 @@ import {
   useChainStatus,
   toCETASWei,
   formatCETAS,
+  MAX_ALLOWANCE,
 } from '@/src/hooks/useCetasContracts'
 import { MAINNET } from '@/src/lib/contracts'
 
@@ -93,7 +94,7 @@ export default function RedeemClient() {
     try {
       if (needsApproval) {
         setStep('approving')
-        const approveTx = await approveMutation.approve(MAINNET.CetasTreasury, amountWei)
+        const approveTx = await approveMutation.approve(MAINNET.CetasTreasury, MAX_ALLOWANCE)
         setTxHash(approveTx)
         await refetchAllowance()
       }
