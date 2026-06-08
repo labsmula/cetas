@@ -20,6 +20,8 @@ import {
 const cetasPointsAbi = CetasPointsABI as Abi
 const cetasTreasuryAbi = CetasTreasuryABI as Abi
 
+export const MAX_ALLOWANCE = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') as bigint
+
 export function useChainStatus() {
   const { chainId } = useAccount()
   const { switchChain } = useSwitchChain()
@@ -38,6 +40,7 @@ function useAddrs() {
   if (chainId !== undefined) return MAINNET // fallback to mainnet
   return null
 }
+
 // ─── CetasPoints: Read ──────────────────────────────────────────────────
 
 export function useBalanceOf(address?: Address) {
