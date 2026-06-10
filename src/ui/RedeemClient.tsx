@@ -251,7 +251,7 @@ export default function RedeemClient() {
           {needsApproval && step === 'input' && (
             <p className="relative z-[1] flex items-center gap-1.5 text-[10px] text-[var(--ally)]">
               <AlertTriangle className="h-3 w-3 flex-shrink-0" />
-              Approval required first — you&apos;ll sign 2 transactions.
+              First swap needs approval (2 transactions, next swaps only 1)
             </p>
           )}
 
