@@ -8,12 +8,9 @@ import {
   REROLLS_PER_STAGE,
   MAX_BOARD_SLOTS,
   MAX_GOLD,
-  ENDLESS_STAGE_CETAS_REWARD,
   ENDLESS_STAGE_XP_REWARD,
 } from '@/src/game/constants'
 import { UNIT_DEFS } from '@/src/game/entities/unitDefs'
-import { grantCetasReward } from '@/src/lib/onchain'
-import type { Address } from 'viem'
 
 const VALID_UNIT_IDS = new Set(UNIT_DEFS.map(unit => unit.id))
 
@@ -48,6 +45,32 @@ function todayKey(): string {
 
 function levelForExperience(experience: number): number {
   return Math.max(1, Math.floor(experience / 500) + 1)
+}
+
+// ── Rate limiter: per-wallet, in-memory ──────────────────────────────────────
+// Prevents rapid-fire replay of stage advances from the same wallet.
+// Reset every RATE_WINDOW_MS. Allows up to RATE_MAX_CALLS within that window.
+
+const RATE_WINDOW_MS = 60_000 // 1 minute
+const RATE_MAX_CALLS = 10      // max endless POSTs per wallet per minute
+
+const rateBucket = new Map<string, { count: number; resetAt: number }>()
+
+function checkEndlessRateLimit(wallet: string, ip: string | null): boolean {
+  const now = Date.now()
+  // Garbage-collect stale entries opportunistically
+  rateBucket.forEach((v, k) => {
+    if (v.resetAt <= now) rateBucket.delete(k)
+  })
+
+  const key = `${wallet}:${ip ?? 'no-ip'}`
+  const entry = rateBucket.get(key)
+  if (!entry || entry.resetAt <= now) {
+    rateBucket.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS })
+    return true
+  }
+  entry.count++
+  return entry.count <= RATE_MAX_CALLS
 }
 
 async function incrementTaskProgress(playerId: string, taskIds: string[]): Promise<void> {
@@ -85,6 +108,17 @@ async function incrementTaskProgress(playerId: string, taskIds: string[]): Promi
 export async function POST(req: NextRequest) {
   const { auth, error } = await requireAuth(req)
   if (error) return error
+
+  // ── Rate limit check ──────────────────────────────────────────────────────
+  const clientIp = req.headers.get('x-forwarded-for')
+    ?? req.headers.get('x-real-ip')
+    ?? null
+  if (!checkEndlessRateLimit(auth.walletAddress, clientIp)) {
+    return NextResponse.json(
+      { error: 'Too many requests. Slow down.' },
+      { status: 429 },
+    )
+  }
 
   try {
     const body = await req.json().catch(() => ({}))
@@ -128,9 +162,6 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    let rewardTxHashes: string[] = []
-    let rewardError: string | null = null
-
     // Increment play tasks on every completed battle (win or loss)
     if (parsed.data.battleCompleted) {
       const battleTasks = ['play1', 'play3']
@@ -138,14 +169,11 @@ export async function POST(req: NextRequest) {
       await incrementTaskProgress(auth.playerId, battleTasks)
     }
 
-    if (stageAdvanced) {
-      try {
-        rewardTxHashes = await grantCetasReward(auth.walletAddress as Address, ENDLESS_STAGE_CETAS_REWARD)
-      } catch (err) {
-        rewardError = err instanceof Error ? err.message : 'Failed to grant on-chain reward'
-        console.error('[POST /api/player/endless] on-chain reward failed', err)
-      }
-    }
+    // ── On-chain reward: DISABLED ────────────────────────────────────────────
+    // The client-only `stage` / `battleWon` values are not a server-authoritative
+    // battle proof.  Granting `grantCetasReward` here allowed unlimited farming.
+    // On-chain rewards must only be granted from a verified server-side battle
+    // simulation or an oracle-verified proof — neither exists yet.
 
     const player = await prisma.player.findUnique({
       where: { id: auth.playerId },
@@ -160,12 +188,12 @@ export async function POST(req: NextRequest) {
         totalPoints: player?.totalPoints ?? current.totalPoints,
         experience: player?.experience ?? current.experience,
         level: player?.level ?? current.level,
-        pointsAwarded: stageAdvanced && !rewardError ? ENDLESS_STAGE_CETAS_REWARD : 0,
+        pointsAwarded: 0,
         experienceAwarded: stageAdvanced ? ENDLESS_STAGE_XP_REWARD : 0,
         onchainReward: {
-          status: stageAdvanced ? (rewardError ? 'failed' : 'confirmed') : 'skipped',
-          txHashes: rewardTxHashes,
-          error: rewardError,
+          status: 'disabled',
+          txHashes: [],
+          error: 'On-chain reward disabled until server-authoritative battle proof is implemented',
         },
       },
     })
