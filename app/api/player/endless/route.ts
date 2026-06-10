@@ -8,9 +8,11 @@ import {
   REROLLS_PER_STAGE,
   MAX_BOARD_SLOTS,
   MAX_GOLD,
+  ENDLESS_STAGE_CETAS_REWARD,
   ENDLESS_STAGE_XP_REWARD,
 } from '@/src/game/constants'
 import { UNIT_DEFS } from '@/src/game/entities/unitDefs'
+import { grantCetasReward } from '@/src/lib/onchain'
 
 const VALID_UNIT_IDS = new Set(UNIT_DEFS.map(unit => unit.id))
 
@@ -169,11 +171,58 @@ export async function POST(req: NextRequest) {
       await incrementTaskProgress(auth.playerId, battleTasks)
     }
 
-    // ── On-chain reward: DISABLED ────────────────────────────────────────────
-    // The client-only `stage` / `battleWon` values are not a server-authoritative
-    // battle proof.  Granting `grantCetasReward` here allowed unlimited farming.
-    // On-chain rewards must only be granted from a verified server-side battle
-    // simulation or an oracle-verified proof — neither exists yet.
+    // ── On-chain reward: re-enabled with idempotency ─────────────────────────
+    let pointsAwarded = 0
+    let onchainReward: { status: string; txHashes: string[]; error?: string } = {
+      status: 'skipped',
+      txHashes: [],
+    }
+
+    if (stageAdvanced && parsed.data.battleWon) {
+      // Idempotency: use playerId + stage as unique claim key
+      const claimKey = `endless_stage_${nextStage}`
+      const existingClaim = await prisma.pointRedemption.findFirst({
+        where: { playerId: auth.playerId, idempotencyKey: claimKey },
+        select: { id: true, txHash: true },
+      })
+
+      if (existingClaim) {
+        // Already claimed this stage — return previous result
+        onchainReward = {
+          status: 'already_claimed',
+          txHashes: existingClaim.txHash ? [existingClaim.txHash] : [],
+        }
+      } else {
+        // Claim reward on-chain
+        try {
+          const wallet = auth.walletAddress as `0x${string}`
+          const txHashes = await grantCetasReward(wallet, ENDLESS_STAGE_CETAS_REWARD)
+
+          // Record idempotency
+          await prisma.pointRedemption.create({
+            data: {
+              playerId: auth.playerId,
+              walletAddress: auth.walletAddress,
+              idempotencyKey: claimKey,
+              points: ENDLESS_STAGE_CETAS_REWARD,
+              celoAmount: '0',
+              tokenAmountWei: BigInt(0),
+              status: 'confirmed',
+              txHash: txHashes[0] ?? null,
+              submittedAt: new Date(),
+              confirmedAt: new Date(),
+            },
+          })
+
+          pointsAwarded = ENDLESS_STAGE_CETAS_REWARD
+          onchainReward = { status: 'success', txHashes }
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : 'Unknown on-chain reward error'
+          console.error('[POST /api/player/endless] on-chain reward failed:', msg)
+          onchainReward = { status: 'failed', txHashes: [], error: msg }
+        }
+      }
+    }
 
     const player = await prisma.player.findUnique({
       where: { id: auth.playerId },
@@ -188,13 +237,9 @@ export async function POST(req: NextRequest) {
         totalPoints: player?.totalPoints ?? current.totalPoints,
         experience: player?.experience ?? current.experience,
         level: player?.level ?? current.level,
-        pointsAwarded: 0,
+        pointsAwarded,
         experienceAwarded: stageAdvanced ? ENDLESS_STAGE_XP_REWARD : 0,
-        onchainReward: {
-          status: 'disabled',
-          txHashes: [],
-          error: 'On-chain reward disabled until server-authoritative battle proof is implemented',
-        },
+        onchainReward,
       },
     })
   } catch (err) {
