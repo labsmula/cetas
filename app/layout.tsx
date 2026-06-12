@@ -23,6 +23,8 @@ export default function RootLayout({
         {/* home_bg preload — CSS background-image tidak di-handle next/image */}
         <link rel="preload" as="image" href="/home_bg.png" />
         <link rel="preload" as="image" href="/landing-bg.jpg" />
+        {/* Talentapp verification */}
+        <meta name="talentapp:project_verification" content="d33ef4f31d08e7aac18845b0ade189c4e376d018ffab47af7d1a1517eb92a6ea3ed6035827d7e3bb49b64fcaa8b0848dde2624e7ba25fb3fd6ee54c0fd44bdc3" />
       </head>
       <body className="min-h-full flex flex-col">
         <QueryProvider>
