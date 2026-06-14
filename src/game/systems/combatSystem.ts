@@ -2,7 +2,7 @@
 import { UNIT_DEFS } from '../entities/unitDefs'
 import { makeUnit } from '../core/unitFactory'
 import type { BoardGrid, Unit, EnemyPreview } from '../core/types'
-import { COLS, ROWS, getAllUnits } from './boardSystem'
+import { COLS, ROWS, getAllUnits, isBuildingCell } from './boardSystem'
 import {
   ARROW_SPEED_PX,
   FLOAT_TEXT_TTL,
@@ -119,7 +119,29 @@ function chebyshev(r1: number, c1: number, r2: number, c2: number): number {
   return Math.max(Math.abs(r1 - r2), Math.abs(c1 - c2))
 }
 
-/** Move unit one step toward target on the board. Returns new [r,c] or null if blocked. */
+/** Euclidean distance for smoother pathing heuristics */
+function euclid(r1: number, c1: number, r2: number, c2: number): number {
+  const dr = r1 - r2, dc = c1 - c2
+  return Math.sqrt(dr * dr + dc * dc)
+}
+
+/** Is cell walkable (in bounds, not building row, not occupied)? */
+function isWalkable(board: BoardGrid, r: number, c: number): boolean {
+  return r >= 0 && r < ROWS && c >= 0 && c < COLS
+    && board[r][c] === null
+    && !isBuildingCell(r)
+}
+
+/**
+ * Smarter step-toward with anti-cluster avoidance.
+ *
+ * Strategy:
+ * 1. Score all 8 neighbours by: distance to target + crowd penalty.
+ *    Cells occupied by friendly units add a penalty so units spread out.
+ * 2. Pick lowest-score walkable cell.
+ * 3. Fallback: allow lateral movement even if it slightly retreats in row,
+ *    to break deadlock corridors.
+ */
 function stepToward(
   board: BoardGrid,
   fromR: number, fromC: number,
@@ -128,38 +150,91 @@ function stepToward(
   const dr = Math.sign(toR - fromR)
   const dc = Math.sign(toC - fromC)
 
-  // Priority 1: direct candidates toward target
-  const candidates: [number, number][] = []
-  if (dr !== 0 && dc !== 0) candidates.push([fromR + dr, fromC + dc])
-  if (dr !== 0) candidates.push([fromR + dr, fromC])
-  if (dc !== 0) candidates.push([fromR, fromC + dc])
+  // Score each of the 8 neighbours
+  interface Candidate { r: number; c: number; score: number }
+  const candidates: Candidate[] = []
 
-  for (const [nr, nc] of candidates) {
-    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === null
-        && nr !== 0 && nr !== ROWS - 1)  // skip building rows
-      return [nr, nc]
-  }
+  for (let dR = -1; dR <= 1; dR++) {
+    for (let dC = -1; dC <= 1; dC++) {
+      if (dR === 0 && dC === 0) continue
+      const nr = fromR + dR, nc = fromC + dC
+      if (!isWalkable(board, nr, nc)) continue
 
-  // Priority 2: fallback — try all 8 neighbours sorted by distance to target
-  // This breaks deadlocks when the direct path is fully blocked
-  const neighbours: [number, number, number][] = [] // [r, c, dist]
-  for (let dr2 = -1; dr2 <= 1; dr2++) {
-    for (let dc2 = -1; dc2 <= 1; dc2++) {
-      if (dr2 === 0 && dc2 === 0) continue
-      const nr = fromR + dr2, nc = fromC + dc2
-      if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue
-      if (board[nr][nc] !== null) continue
-      if (nr === 0 || nr === ROWS - 1) continue  // skip building rows
-      // Skip cells that move away in both axes (pure retreat)
-      if (dr !== 0 && dc !== 0 && Math.sign(dr2) === -Math.sign(dr) && Math.sign(dc2) === -Math.sign(dc)) continue
-      const dist = Math.max(Math.abs(nr - toR), Math.abs(nc - toC))
-      neighbours.push([nr, nc, dist])
+      // Base distance score: euclidean to target (lower = better)
+      const distScore = euclid(nr, nc, toR, toC)
+
+      // Directional bonus: prefer moving toward target
+      const rowProgress = dr !== 0 ? (Math.sign(dR) === dr ? -0.3 : 0.3) : 0
+      const colProgress = dc !== 0 ? (Math.sign(dC) === dc ? -0.3 : 0.3) : 0
+
+      // Crowd penalty: count friendly neighbours around candidate cell
+      // This spreads units so they don't all stack on the same tile
+      let crowdPenalty = 0
+      for (let cr = -1; cr <= 1; cr++) {
+        for (let cc = -1; cc <= 1; cc++) {
+          if (cr === 0 && cc === 0) continue
+          const adjR = nr + cr, adjC = nc + cc
+          if (adjR >= 0 && adjR < ROWS && adjC >= 0 && adjC < COLS && board[adjR][adjC] !== null) {
+            crowdPenalty += 0.25
+          }
+        }
+      }
+
+      const score = distScore + rowProgress + colProgress + crowdPenalty
+      candidates.push({ r: nr, c: nc, score })
     }
   }
-  neighbours.sort((a, b) => a[2] - b[2])
-  if (neighbours.length > 0) return [neighbours[0][0], neighbours[0][1]]
 
-  return null
+  if (candidates.length === 0) return null
+
+  // Sort by score (lowest first = best move)
+  candidates.sort((a, b) => a.score - b.score)
+  return [candidates[0].r, candidates[0].c]
+}
+
+/**
+ * Pick the best target for a unit — not just nearest, but considering:
+ * - Distance (weighted heavily)
+ * - Low-HP enemies preferred (finish them off)
+ * - Spread: if many friendlies already chase same target, prefer another
+ */
+function pickBestTarget(
+  unit: Unit,
+  myR: number, myC: number,
+  foes: { u: Unit; r: number; c: number }[],
+  friendlies: { u: Unit; r: number; c: number }[],
+): { u: Unit; r: number; c: number } | null {
+  interface ScoredTarget { foe: { u: Unit; r: number; c: number }; score: number }
+  const scored: ScoredTarget[] = []
+
+  for (const foe of foes) {
+    if (foe.u.dead) continue
+
+    const dist = chebyshev(myR, myC, foe.r, foe.c)
+
+    // Count how many friendlies are closer or equally close to this foe
+    let chasers = 0
+    for (const f of friendlies) {
+      if (f.u.dead || f.u.uid === unit.uid) continue
+      const fDist = chebyshev(f.r, f.c, foe.r, foe.c)
+      if (fDist <= dist + 1) chasers++
+    }
+
+    // Score: lower is better
+    // - distance is primary factor
+    // - finishing off low-HP targets gets a bonus
+    // - being the Nth chaser adds penalty (spread out)
+    const hpRatio = foe.u.curHp / foe.u.maxHp  // 0–1, lower = closer to death
+    const finishBonus = hpRatio < 0.4 ? -1.5 : hpRatio < 0.7 ? -0.5 : 0
+    const chasePenalty = chasers * 0.8
+    const score = dist * 1.5 + chasePenalty + finishBonus
+
+    scored.push({ foe, score })
+  }
+
+  if (scored.length === 0) return null
+  scored.sort((a, b) => a.score - b.score)
+  return scored[0].foe
 }
 
 // ─── Battle step ──────────────────────────────────────────────────────────────
@@ -223,16 +298,17 @@ export function runBattleStep(board: BoardGrid, deltaMs = 16, speedMult = 1): Ba
 
     const myPos = pos.get(u.uid)!
     const foes = u.enemy ? allies : enemies
+    const friendlies = u.enemy ? enemies : allies
 
-    let closest: { u: Unit; r: number; c: number } | null = null
-    let closestDist = Infinity
-    for (const f of foes) {
-      if (f.u.dead) continue
-      const fp = pos.get(f.u.uid)!
-      const d = chebyshev(myPos.r, myPos.c, fp.r, fp.c)
-      if (d < closestDist) { closestDist = d; closest = { u: f.u, r: fp.r, c: fp.c } }
-    }
-    if (!closest) continue
+    // Use smart target selection instead of simple nearest.
+    // Re-read target position from `pos` so movement earlier in this tick is respected.
+    const target = pickBestTarget(u, myPos.r, myPos.c, foes, friendlies)
+    if (!target) continue
+
+    const targetPos = pos.get(target.u.uid)
+    if (!targetPos) continue
+    const closest = { u: target.u, r: targetPos.r, c: targetPos.c }
+    const closestDist = chebyshev(myPos.r, myPos.c, closest.r, closest.c)
 
     const inRange = closestDist <= u.attackRange
 
